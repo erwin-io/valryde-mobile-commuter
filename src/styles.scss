@@ -1,0 +1,29 @@
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* Interface tokens from docs/ui-ux/DESIGN_SYSTEM.md. Admin route colors are content, not tokens. */
+:root {
+  --valryde-primary: #0b6e4f;
+  --valryde-primary-strong: #07563e;
+  --valryde-surface: #ffffff;
+  --valryde-background: #f4f6f5;
+  --valryde-text: #17211d;
+  --valryde-muted: #5e6b65;
+  --valryde-border: #d7deda;
+  --valryde-warning: #9a5a00;
+  --valryde-danger: #b42318;
+  --valryde-info: #175cd3;
+
+  --ion-color-primary: #0b6e4f;
+  --ion-color-primary-rgb: 11, 110, 79;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #07563e;
+  --ion-color-primary-tint: #237d61;
+  --ion-background-color: #f4f6f5;
+  --ion-text-color: #17211d;
+}
