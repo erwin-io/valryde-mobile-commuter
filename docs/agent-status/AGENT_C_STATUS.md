@@ -2,7 +2,7 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-21T04:30:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-21T04:45:00+08:00
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
 - Branch / HEAD SHA: `feat/23-map-shell`, based on `main` `f186c4f3fcc3b713589fb370ae33a27e086e94af`; the commit SHAs for this slice are listed in the PR.
@@ -10,13 +10,13 @@
 - Execution agent: Claude took over from Codex on 2026-10-21 because of Codex usage limits; no prior work was discarded.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1, issued 2026-10-19; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c` (last changed in `7ec97251`).
 - Checklist IDs: 22–37
-- GitHub issues / PRs: Issue https://github.com/erwin-io/valryde-mobile-commuter/issues/1 (opened by the active `gh` account `seefixmanagement`). PR not yet opened: `git push` is denied (HTTP 403) for the configured credential `seefixmanagement`.
+- GitHub issues / PRs: Issue https://github.com/erwin-io/valryde-mobile-commuter/issues/1; PR https://github.com/erwin-io/valryde-mobile-commuter/pull/2 (`feat/23-map-shell` → `main`, open, awaiting Tech Lead review; not to be self-merged).
 - Implementation progress: READY_FOR_REVIEW (checklist 23 shell and UX contract)
 - Tech Lead review decision (if actually issued): Not reviewed
-- Current objective: Submit the checklist 23 PR for Tech Lead review of `UX_CONTRACT_READY` and the checklist 23 map-first shell.
+- Current objective: Tech Lead review of PR #2 of `UX_CONTRACT_READY` and the checklist 23 map-first shell.
 - Last confirmed result: The Ionic/Angular/Capacitor/MapLibre shell builds, lints, typechecks and passes 13 unit/component tests; the map renders the OpenFreeMap style in a browser at 390×844 and 320×568.
 - Next concrete action: After Tech Lead UX review, implement checklists 24–28 (route search/list/details/direction/line) against verified Agent A `GET /api/transit-routes` and `GET /api/transit-routes/:routeId`.
-- Blocked by / decision owner: Owner — push access or approval to push as `erwin-io` (Git authentication is not changed without approval). Major screen expansion awaits Tech Lead review of the UX contract. Stop registry, place/direct discovery, journey details, live tracking, available counts, realtime, ETA/fare/schedule and favorites sync remain gated by absent or unapproved contracts.
+- Blocked by / decision owner: Major screen expansion awaits Tech Lead review of the UX contract. Stop registry, place/direct discovery, journey details, live tracking, available counts, realtime, ETA/fare/schedule and favorites sync remain gated by absent or unapproved contracts.
 - Dependencies / affected agents: Agent A (auth/RBAC/transit/place contracts), Agent B (latest-state/compliance/realtime/reconciliation), Agent E (Admin-authored route geometry/color), Tech Lead G (shared-contract and UX review).
 
 ## Checklist coverage
@@ -60,6 +60,17 @@
 - State: OWNER_VERIFICATION_PENDING (not yet attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-21 04:45 +08:00 — Checklist 23 PR submitted for Tech Lead review
+
+- Action / reason: The owner switched the active GitHub CLI account to `erwin-io` and ran `gh auth setup-git`; the blocked push was resumed with the existing credential helper. No authentication settings were changed by the agent.
+- Checklist/issue: 23; issue #1.
+- Files/config/services affected: Remote branch `feat/23-map-shell`; PR #2; this status.
+- Observed result (success/failure/rollback): Push succeeded; PR https://github.com/erwin-io/valryde-mobile-commuter/pull/2 opened against `main`. GitHub reports it mergeable, with 1 check passing and 0 failing.
+- Validation and evidence: Local gates from 04:24–04:25 +08:00 unchanged (lint, typecheck, 13/13 tests, build, branch diff check passed). Native Android/device verification still pending.
+- Contracts / risks / dependencies: None changed.
+- Commit/PR link or SHA (if available): PR #2; code head `dcbe8ce` plus this status-only commit.
+- Next action / owner gate: Tech Lead review. Do not merge without owner authorization.
 
 ### 2026-10-21 04:30 +08:00 — Checklist 23 PR prepared; push blocked by credentials
 
