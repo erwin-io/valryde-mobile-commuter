@@ -2,7 +2,7 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-21T04:15:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-21T04:30:00+08:00
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
 - Branch / HEAD SHA: `feat/23-map-shell`, based on `main` `f186c4f3fcc3b713589fb370ae33a27e086e94af`; the commit SHAs for this slice are listed in the PR.
@@ -10,13 +10,13 @@
 - Execution agent: Claude took over from Codex on 2026-10-21 because of Codex usage limits; no prior work was discarded.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1, issued 2026-10-19; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c` (last changed in `7ec97251`).
 - Checklist IDs: 22–37
-- GitHub issues / PRs: See the latest activity entry.
+- GitHub issues / PRs: Issue https://github.com/erwin-io/valryde-mobile-commuter/issues/1 (opened by the active `gh` account `seefixmanagement`). PR not yet opened: `git push` is denied (HTTP 403) for the configured credential `seefixmanagement`.
 - Implementation progress: READY_FOR_REVIEW (checklist 23 shell and UX contract)
 - Tech Lead review decision (if actually issued): Not reviewed
-- Current objective: Tech Lead review of `UX_CONTRACT_READY` and the checklist 23 map-first shell.
+- Current objective: Submit the checklist 23 PR for Tech Lead review of `UX_CONTRACT_READY` and the checklist 23 map-first shell.
 - Last confirmed result: The Ionic/Angular/Capacitor/MapLibre shell builds, lints, typechecks and passes 13 unit/component tests; the map renders the OpenFreeMap style in a browser at 390×844 and 320×568.
 - Next concrete action: After Tech Lead UX review, implement checklists 24–28 (route search/list/details/direction/line) against verified Agent A `GET /api/transit-routes` and `GET /api/transit-routes/:routeId`.
-- Blocked by / decision owner: Major screen expansion awaits Tech Lead review of the UX contract. Stop registry, place/direct discovery, journey details, live tracking, available counts, realtime, ETA/fare/schedule and favorites sync remain gated by absent or unapproved contracts.
+- Blocked by / decision owner: Owner — push access or approval to push as `erwin-io` (Git authentication is not changed without approval). Major screen expansion awaits Tech Lead review of the UX contract. Stop registry, place/direct discovery, journey details, live tracking, available counts, realtime, ETA/fare/schedule and favorites sync remain gated by absent or unapproved contracts.
 - Dependencies / affected agents: Agent A (auth/RBAC/transit/place contracts), Agent B (latest-state/compliance/realtime/reconciliation), Agent E (Admin-authored route geometry/color), Tech Lead G (shared-contract and UX review).
 
 ## Checklist coverage
@@ -38,8 +38,8 @@
 | `npm run typecheck` (app + spec tsconfigs) | Local Windows | PASSED | 2026-10-21 04:11 +08:00 | Strict TypeScript and strict templates. |
 | `npm test` (Vitest via `@angular/build:unit-test`) | Local Windows, jsdom | PASSED | 2026-10-21 04:11 +08:00 | 3 files, 13 tests: location outcomes, map lifecycle/style-error/retry/user-location layer, recenter permission flow. |
 | `npm run build` (production) | Local Windows | PASSED | 2026-10-21 04:11 +08:00 | Initial 535 kB raw / 140 kB transfer under the 600 kB warning budget; MapLibre worker copied to `/maplibre/`. |
-| Browser smoke test (`npm start`) | Claude browser pane, 390×844 and 320×568 | PASSED | 2026-10-21 04:10 +08:00 | Map style renders; attribution visible; recenter shows the location explanation; "Not now" leaves the map usable; tabs navigate. Fixed a recenter/attribution overlap at 320 px. |
-| `git diff --check` | Local repository | PASSED | 2026-10-21 04:11 +08:00 | Only informational LF→CRLF warnings. |
+| Browser smoke test (`npm start`) | Claude browser pane, 390×844 and 320×568 | PASSED | 2026-10-21 04:27 +08:00 | Screenshots in `docs/testing/evidence/checklist-23/`. A hidden browser pane suspends `requestAnimationFrame`, so the map stays in its loading state until frames render (an environment artifact, not an app defect). Map style renders; attribution visible; recenter shows the location explanation; "Not now" leaves the map usable; tabs navigate. Fixed a recenter/attribution overlap at 320 px. |
+| `git diff --check` over the branch commits | Local repository | PASSED | 2026-10-21 04:25 +08:00 | First run flagged 14 Markdown hard-break trailing spaces in bootstrap docs; converted to backslash breaks (same rendering). |
 | `npm audit` | Local repository | 3 moderate | 2026-10-21 04:00 +08:00 | `uuid` via `xcode` via `@capacitor/cli` (iOS build tooling, dev-only, not shipped). npm's only fix is a downgrade; tracked. |
 | Android build / physical device | — | NOT_RUN | — | Android platform not added; native geolocation prompts untested. |
 | Shared policy blob comparison | Local vs `valryde-api` `origin/main` | PASSED | 2026-10-21 03:50 +08:00 | Same Git blob; SHA-256 differs only by working-tree line endings. |
@@ -60,6 +60,17 @@
 - State: OWNER_VERIFICATION_PENDING (not yet attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-21 04:30 +08:00 — Checklist 23 PR prepared; push blocked by credentials
+
+- Action / reason: Tech Lead G authorized formal PR submission for checklist 23.
+- Checklist/issue: 23; issue #1.
+- Files/config/services affected: `docs/testing/evidence/checklist-23/*.jpg` (5 screenshots); Markdown hard-break cleanup in `AGENTS.md`, the handoff and 4 docs; this status.
+- Observed result (success/failure/rollback): Gates passed again. `git push -u origin feat/23-map-shell` failed with HTTP 403: the configured credential `seefixmanagement` lacks write access to `erwin-io/valryde-mobile-commuter`. Git authentication was not changed, per the instruction not to change it without approval. No PR exists yet.
+- Validation and evidence: lint, typecheck, 13/13 tests, production build and diff check passed at 04:24–04:25 +08:00. All tests use test doubles (fake MapLibre factory, fake geolocation and Ionic controllers); no VALRYDE backend is involved in this slice.
+- Contracts / risks / dependencies: None changed. Native Android/device verification remains pending.
+- Commit/PR link or SHA (if available): Local `feat/23-map-shell`; the final SHA is reported in chat.
+- Next action / owner gate: Owner grants `seefixmanagement` write access or approves a one-time push as `erwin-io`; then push and open the PR against `main`.
 
 ### 2026-10-21 04:15 +08:00 — Checklist 23 map-first shell implemented
 

@@ -1,9 +1,9 @@
 # VALRYDE — Agent C Commuter Mobile Instructions
 
-**Project:** Valryde — Public Jeepney Route Live Tracking & Monitoring System  
-**Module owner:** Agent C — Commuter Mobile  
-**Checklist ownership:** 22–37  
-**Repository:** `valryde-mobile-commuter`  
+**Project:** Valryde — Public Jeepney Route Live Tracking & Monitoring System\
+**Module owner:** Agent C — Commuter Mobile\
+**Checklist ownership:** 22–37\
+**Repository:** `valryde-mobile-commuter`\
 **Baseline:** Version 1.0 MVP
 
 ## 1. Instruction order

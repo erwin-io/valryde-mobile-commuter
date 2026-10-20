@@ -1,6 +1,6 @@
 # VALRYDE Commuter Design System
 
-**Contract state:** UX_CONTRACT_READY  
+**Contract state:** UX_CONTRACT_READY\
 **Direction:** map-first Philippine transit utility using native Ionic patterns
 
 ## Principles

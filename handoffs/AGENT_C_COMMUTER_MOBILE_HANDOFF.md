@@ -1,9 +1,9 @@
 # VALRYDE — Agent C Commuter Mobile Handoff
 
-**Agent:** C — Commuter Mobile  
-**Checklist IDs:** 22–37  
-**Repository:** `valryde-mobile-commuter`  
-**Baseline:** Version 1.0 MVP  
+**Agent:** C — Commuter Mobile\
+**Checklist IDs:** 22–37\
+**Repository:** `valryde-mobile-commuter`\
+**Baseline:** Version 1.0 MVP\
 **Bootstrap date:** 2026-10-21
 
 ## Mission

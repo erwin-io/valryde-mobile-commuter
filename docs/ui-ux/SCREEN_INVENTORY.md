@@ -1,6 +1,6 @@
 # Screen Inventory
 
-**Contract state:** UX_CONTRACT_READY  
+**Contract state:** UX_CONTRACT_READY\
 **Legend:** `APPROVED` is in checklist 22–37; `GATED` needs an unavailable approved backend contract; `PROPOSED` is not committed product scope.
 
 | Screen / state | Scope | Purpose and entry | Navigation / actions | Data dependency | Acceptance criteria |

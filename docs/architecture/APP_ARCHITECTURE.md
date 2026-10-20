@@ -1,7 +1,7 @@
 # Agent C Application Architecture
 
-**Status:** UX contract baseline  
-**Scope:** Checklist IDs 22–37  
+**Status:** UX contract baseline\
+**Scope:** Checklist IDs 22–37\
 **Decision gate:** Tech Lead review required before expanding beyond the reversible shell
 
 ## Goals

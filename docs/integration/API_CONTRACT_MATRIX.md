@@ -1,7 +1,7 @@
 # API Contract Matrix
 
-**Verified backend:** `valryde-api` canonical `main` at `711f4c45967e192be155e05e72714b99645ecc7d`  
-**Verification date:** 2026-10-21  
+**Verified backend:** `valryde-api` canonical `main` at `711f4c45967e192be155e05e72714b99645ecc7d`\
+**Verification date:** 2026-10-21\
 **Base path:** configurable origin plus `/api`
 
 `AVAILABLE` means present in merged source/OpenAPI at the revision above. It does not mean the current environment is deployed or reachable.
