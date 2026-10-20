@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { APP_CONFIG } from '../../core/app-config';
@@ -14,6 +15,8 @@ class FakeTransitMap {
   readonly center = input<[number, number]>();
   readonly zoom = input<number>();
   readonly userLocation = input<[number, number] | null>(null);
+  readonly routeLine = input<unknown>(null);
+  readonly bottomInset = input(0);
   focus = vi.fn();
 }
 
@@ -33,12 +36,13 @@ describe('MapPage recenter', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         { provide: LocationService, useValue: location },
         { provide: AlertController, useValue: alerts },
         { provide: ToastController, useValue: toasts },
         {
           provide: APP_CONFIG,
-          useValue: { mapStyleUrl: 'https://example.test/style.json', defaultCenter: [121, 14.6], defaultZoom: 11 },
+          useValue: { apiBaseUrl: '/api', mapStyleUrl: 'https://example.test/style.json', defaultCenter: [121, 14.6], defaultZoom: 11 },
         },
       ],
     });

@@ -2,7 +2,13 @@ import { Component, input, output } from '@angular/core';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
 import { addIcons } from 'ionicons';
-import { alertCircleOutline, cloudOfflineOutline, constructOutline } from 'ionicons/icons';
+import {
+  alertCircleOutline,
+  busOutline,
+  cloudOfflineOutline,
+  constructOutline,
+  searchOutline,
+} from 'ionicons/icons';
 
 /** Standard loading/empty/error/offline explanation with at most one recovery action. */
 @Component({
@@ -56,6 +62,6 @@ export class StatePanelComponent {
   readonly action = output<void>();
 
   constructor() {
-    addIcons({ alertCircleOutline, cloudOfflineOutline, constructOutline });
+    addIcons({ alertCircleOutline, busOutline, cloudOfflineOutline, constructOutline, searchOutline });
   }
 }

@@ -1,11 +1,14 @@
 import { TestBed } from '@angular/core/testing';
-import { MAP_FACTORY, TransitMapComponent } from './transit-map.component';
+import { MAP_FACTORY, RouteLine, TransitMapComponent } from './transit-map.component';
 
 class FakeMap {
   handlers: Record<string, () => void> = {};
   removed = false;
-  setData = vi.fn();
+  /** Last GeoJSON written to each source id. */
+  data: Record<string, { features: unknown[] }> = {};
   easeTo = vi.fn();
+  fitBounds = vi.fn();
+  setPaintProperty = vi.fn();
   addSource = vi.fn();
   addLayer = vi.fn();
   resize = vi.fn();
@@ -16,8 +19,8 @@ class FakeMap {
   remove() {
     this.removed = true;
   }
-  getSource() {
-    return { setData: this.setData };
+  getSource(id: string) {
+    return { setData: (d: { features: unknown[] }) => (this.data[id] = d) };
   }
   emit(event: string) {
     this.handlers[event]?.();
@@ -59,7 +62,7 @@ describe('TransitMapComponent', () => {
     return fixture;
   }
 
-  it('shows loading until the style loads, then adds the user-location layer', async () => {
+  it('shows loading until the style loads, then adds route and user-location layers', async () => {
     const fixture = await render();
     expect(fixture.componentInstance.state()).toBe('initializing');
     expect(fixture.nativeElement.textContent).toContain('Loading map');
@@ -68,7 +71,9 @@ describe('TransitMapComponent', () => {
     await fixture.whenStable();
 
     expect(fixture.componentInstance.state()).toBe('ready');
-    expect(maps[0].addLayer).toHaveBeenCalledOnce();
+    const layerIds = maps[0].addLayer.mock.calls.map(([layer]) => layer.id);
+    // The user-location dot is added last so it draws above the route line.
+    expect(layerIds).toEqual(['valryde-route-casing', 'valryde-route-line', 'valryde-user-location']);
     expect(fixture.nativeElement.textContent).not.toContain('Loading map');
   });
 
@@ -100,11 +105,54 @@ describe('TransitMapComponent', () => {
     fixture.componentRef.setInput('userLocation', [121.05, 14.55]);
     await fixture.whenStable();
 
-    expect(maps[0].setData).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        features: [expect.objectContaining({ geometry: { type: 'Point', coordinates: [121.05, 14.55] } })],
-      }),
-    );
+    expect(maps[0].data['valryde-user-location'].features).toEqual([
+      expect.objectContaining({ geometry: { type: 'Point', coordinates: [121.05, 14.55] } }),
+    ]);
+  });
+
+  const line: RouteLine = {
+    id: 'dir-1',
+    coordinates: [
+      [123.86, 10.26],
+      [123.9, 10.3],
+      [123.88, 10.31],
+    ],
+    color: '#43A047',
+  };
+
+  it('draws the official line in the route color and fits it once, above the sheet inset', async () => {
+    const fixture = await render();
+    fixture.componentRef.setInput('bottomInset', 400);
+    fixture.componentRef.setInput('routeLine', line);
+    maps[0].emit('load');
+    await fixture.whenStable();
+
+    expect(maps[0].data['valryde-route'].features).toEqual([
+      expect.objectContaining({ geometry: { type: 'LineString', coordinates: line.coordinates } }),
+    ]);
+    expect(maps[0].setPaintProperty).toHaveBeenCalledWith('valryde-route-line', 'line-color', '#43A047');
+    expect(maps[0].fitBounds).toHaveBeenCalledOnce();
+    const [bounds, options] = maps[0].fitBounds.mock.calls[0];
+    expect(bounds).toEqual([
+      [123.86, 10.26],
+      [123.9, 10.31],
+    ]);
+    expect(options.padding.bottom).toBe(432);
+
+    // Same direction again (e.g. a re-emitted input) must not move the camera the user may have panned.
+    fixture.componentRef.setInput('routeLine', { ...line });
+    await fixture.whenStable();
+    expect(maps[0].fitBounds).toHaveBeenCalledOnce();
+  });
+
+  it('clears the line when the selection is removed', async () => {
+    const fixture = await render();
+    fixture.componentRef.setInput('routeLine', line);
+    maps[0].emit('load');
+    await fixture.whenStable();
+    fixture.componentRef.setInput('routeLine', null);
+    await fixture.whenStable();
+    expect(maps[0].data['valryde-route'].features).toEqual([]);
   });
 
   it('removes the MapLibre instance on destroy', async () => {

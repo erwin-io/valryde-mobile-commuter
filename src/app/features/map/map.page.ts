@@ -1,20 +1,37 @@
 import { Component, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
+import { IonButton } from '@ionic/angular/ion-button';
 import { IonContent } from '@ionic/angular/ion-content';
 import { IonFab } from '@ionic/angular/ion-fab';
 import { IonFabButton } from '@ionic/angular/ion-fab-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
+import { IonModal } from '@ionic/angular/ion-modal';
 import { IonSpinner } from '@ionic/angular/ion-spinner';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
-import { locateOutline } from 'ionicons/icons';
+import { locateOutline, searchOutline } from 'ionicons/icons';
 import { APP_CONFIG } from '../../core/app-config';
+import { RouteDetailComponent } from '../routes/route-detail.component';
+import { RouteSelectionService } from '../routes/route-selection.service';
 import { LngLat, LocationService } from './location.service';
 import { TransitMapComponent } from './transit-map.component';
 
 @Component({
   selector: 'app-map-page',
-  imports: [IonContent, IonFab, IonFabButton, IonIcon, IonSpinner, TransitMapComponent],
+  imports: [
+    IonContent,
+    IonButton,
+    IonFab,
+    IonFabButton,
+    IonIcon,
+    IonModal,
+    IonSpinner,
+    TransitMapComponent,
+    RouteDetailComponent,
+  ],
+  providers: [RouteSelectionService],
   template: `
     <ion-content [fullscreen]="true" [scrollY]="false">
       <app-transit-map
@@ -23,7 +40,15 @@ import { TransitMapComponent } from './transit-map.component';
         [center]="config.defaultCenter"
         [zoom]="config.defaultZoom"
         [userLocation]="userLocation()"
+        [routeLine]="selection.line()"
+        [bottomInset]="sheetInset"
       />
+      <div class="map-search">
+        <ion-button expand="block" color="light" (click)="openSearch()">
+          <ion-icon slot="start" name="search-outline" aria-hidden="true" />
+          Search jeepney routes
+        </ion-button>
+      </div>
       <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="recenter">
         <ion-fab-button
           color="light"
@@ -38,12 +63,46 @@ import { TransitMapComponent } from './transit-map.component';
           }
         </ion-fab-button>
       </ion-fab>
+
+      <ion-modal
+        [isOpen]="selection.state() !== null"
+        [breakpoints]="[0, 0.3, 0.5, 0.9]"
+        [initialBreakpoint]="0.5"
+        [backdropBreakpoint]="0.9"
+        (didDismiss)="closeRoute()"
+      >
+        <ng-template>
+          @if (selection.state(); as state) {
+            <app-route-detail
+              [state]="state"
+              [direction]="selection.direction()"
+              [lineDrawable]="selection.line() !== null"
+              (directionChange)="chooseDirection($event)"
+              (retry)="selection.retry()"
+              (closed)="closeRoute()"
+            />
+          }
+        </ng-template>
+      </ion-modal>
     </ion-content>
   `,
   styles: `
     /* Clear the MapLibre attribution, which wraps to two lines at 320px, so it stays visible. */
     .recenter {
       bottom: 64px;
+    }
+    .map-search {
+      position: absolute;
+      z-index: 2;
+      top: calc(var(--ion-safe-area-top, 0px) + 12px);
+      left: 16px;
+      right: 16px;
+    }
+    .map-search ion-button {
+      --border-radius: 12px;
+      margin: 0;
+      text-transform: none;
+      font-weight: 500;
     }
   `,
 })
@@ -53,15 +112,40 @@ export class MapPage {
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
   private readonly map = viewChild<TransitMapComponent>('map');
+  private readonly router = inject(Router);
+  protected readonly selection = inject(RouteSelectionService);
+  /** Map area hidden by the route sheet at its initial 0.5 breakpoint. */
+  protected readonly sheetInset = Math.round(window.innerHeight * 0.5);
 
   readonly userLocation = signal<LngLat | null>(null);
   readonly locating = signal(false);
   private explained = false;
 
   constructor() {
-    addIcons({ locateOutline });
+    addIcons({ locateOutline, searchOutline });
+    // ?route=<id>&direction=<id> keeps the selection deep-linkable and back-navigable.
+    inject(ActivatedRoute)
+      .queryParamMap.pipe(takeUntilDestroyed())
+      .subscribe((params) => this.selection.select(params.get('route'), params.get('direction')));
     // Use location silently only when already granted; otherwise wait for an explicit tap.
     void this.locateIfGranted();
+  }
+
+  openSearch(): void {
+    void this.router.navigate(['/tabs/routes']);
+  }
+
+  chooseDirection(directionId: string): void {
+    void this.router.navigate([], {
+      queryParams: { direction: directionId },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  closeRoute(): void {
+    if (this.selection.state() === null) return;
+    void this.router.navigate([], { queryParams: { route: null, direction: null }, replaceUrl: true });
   }
 
   async recenter(): Promise<void> {
