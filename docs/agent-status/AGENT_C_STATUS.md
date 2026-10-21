@@ -2,19 +2,19 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-21T11:00:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-21T18:35:00+08:00
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/22-commuter-auth`, based on `main` `0418722` (PR #3 merge); the final head SHA is in the PR.
+- Branch / HEAD SHA: `feat/22-commuter-auth` (PR #4), based on `main` `0418722`; the correction commit SHA is in the PR #4 reply.
 - Repository status: Checklists 23 and 24–28 merged (PR #2, PR #3). The checklist 22 commuter-auth slice is committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` and `.claude/` (local preview config, PR drafts, local-only test-account values) are intentionally not committed.
 - Execution agent: Claude (took over from Codex on 2026-10-21).
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
 - GitHub issues / PRs: PR #2 merged (`38638b5`), PR #3 merged (`0418722`). Checklist 22 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (`feat/22-commuter-auth` → `main`, open, awaiting Tech Lead review; not to be self-merged).
-- Implementation progress: READY_FOR_REVIEW (checklist 22); 23–28 DONE_AFTER_ACCEPTANCE.
-- Tech Lead review decision (if actually issued): PR #3 accepted and merged. Decisions: 650 kB warning budget approved (1 MB error kept); default map center Cebu City; ID 37 blocked on Agent A G6; next priority checklist 22.
-- Current objective: Tech Lead review of the checklist 22 commuter-auth PR.
-- Last confirmed result: The full Agent A auth lifecycle works in the app against the real local API (register → verify → sign in → profile update with token refresh → change email → change password → sign out → forgot/reset password). 74 tests pass; lint, typecheck and build pass.
+- Implementation progress: READY_FOR_REVIEW (checklist 22, security correction applied); 23–28 DONE_AFTER_ACCEPTANCE.
+- Tech Lead review decision (if actually issued): PR #4 CHANGES REQUIRED at `314051f`: a refresh response arriving after `signOut()` could re-authenticate and persist a refresh token. Correction submitted on the same PR; awaiting Agent G re-review. Earlier: PR #2 and PR #3 accepted and merged; 650 kB budget approved; Cebu City default center; ID 37 blocked on G6.
+- Current objective: Agent G re-review of the PR #4 session-concurrency correction.
+- Last confirmed result: Session generation invalidation and ordered storage fix the late-result defect: regression tests C-RACE-01…06 pass (C-RACE-01…04 failed before the fix); 81 tests pass; lint, typecheck and build pass.
 - Next concrete action: Address Tech Lead review. Candidate next slice: 36 favorites (needs a device-local vs backend decision) or tracking once Agent B contracts are accepted.
 - Blocked by / decision owner: Physical-device verification (owner); ID 37 needs G6 (Agent A); 29–35 need Agent B contracts; mobile deep links for emailed links (G5, owner).
 - Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
@@ -36,7 +36,9 @@
 |---|---|---|---|---|
 | `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:54 +08:00 | No findings. |
 | `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | App + spec. |
-| `npm test` | Local Windows, jsdom | PASSED | 2026-10-21 10:54 +08:00 | 12 files, 74 tests (33 new auth tests; all use test doubles). |
+| `npm test` | Local Windows, jsdom | PASSED | 2026-10-21 18:30 +08:00 | 12 files, 81 tests. PR #4 correction: C-RACE-01…06 plus a late-profile-update guard; before the fix 5 of these 7 failed (C-RACE-01…04 and the guard). |
+| PR #4 correction gates: `npm run lint`, `npm run typecheck`, `npm run build`, `git diff --check` | Local Windows | PASSED | 2026-10-21 18:30 +08:00 | Initial bundle 641 kB raw / 171 kB transfer. |
+| Agent A auth contract re-check | `valryde-api` `origin/main` `827738c` vs audited `4a9a152` (source diff) | PASSED | 2026-10-21 18:30 +08:00 | Request/response shapes unchanged. Additive: rate limits now return `429 RATE_LIMITED` (D1 fixed in `34cc664`); already handled and now pinned by C-RACE-06. Live API not re-run for this correction. |
 | `npm run build` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | Initial 640 kB raw / 171 kB transfer (under the approved 650 kB warning). |
 | `git diff --check` | Local repository | PASSED | 2026-10-21 10:54 +08:00 | — |
 | Real API auth flow in browser (`ng serve` proxy → local `valryde-api` `origin/main`; local SMTP sink in place of Mailpit) | Localhost only; generated `@example.test` account; values kept in untracked `.claude/` | PASSED | 2026-10-21 10:44–10:52 +08:00 | register 201; login before verify 403 `EMAIL_NOT_VERIFIED`; verify-email 200, reuse 400 `INVALID_CHALLENGE`; login 200; forced expiry → refresh 200 → `PATCH /auth/me` 200; change-email 202; confirm 200; change-password 204; logout 204; forgot-password 202; reset-password 204; login with reset password 200. |
@@ -51,7 +53,7 @@
 - Realtime/Traccar/geospatial impact: None.
 - Secrets/security/privacy impact: Access token memory-only. Refresh token in the iOS Keychain / Android Keystore via `capacitor-secure-storage-plugin@0.13.0` on native, memory-only in the browser (the plugin's web fallback is `localStorage`, which the Agent A handoff forbids). Refresh is single-flight. No credentials committed. Test values live only in untracked `.claude/test-accounts.local.env`.
 - Contract observations for the Tech Lead (not changes): (1) confirming an email change bumps `credentials_version` and revokes all sessions (`pg-identity-repository.ts:160-171`); the frontend handoff mentions this only for password changes. (2) Reusing a rotated refresh token revokes the whole token family.
-- Required Tech Lead or owner decision: Review PR; approve the secure-storage plugin; G5 mobile deep links for emailed links.
+- Required Tech Lead or owner decision: Re-review PR #4; G5 mobile deep links for emailed links. The secure-storage plugin is provisionally accepted for development.
 
 ## Operator / hardware / external gates
 
@@ -61,6 +63,17 @@
 - State: OWNER_VERIFICATION_PENDING (not attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-21 18:35 +08:00 — PR #4 security correction: session concurrency
+
+- Action / reason: Agent G (CHANGES REQUIRED at `314051f`) found that `SessionService` accepted an in-flight refresh response after `signOut()` and persisted a new refresh token.
+- Checklist/issue: 22; PR #4.
+- Files/config/services affected: `src/app/core/auth/session.service.ts`, `src/app/core/auth/session.service.spec.ts`, this status.
+- Observed result (success/failure/rollback): Cause: sign-in, refresh and restore results were applied unconditionally after their awaits; `rotation` survived a sign-out; storage writes and clears were unordered. Fix: a session generation counter bumped synchronously by every sign-out and local clear, and checked after each await; single-flight refresh scoped to its generation; refresh-token reads, writes and clears run through one ordered queue; a late token is never stored and is revoked server-side (best effort); `setUser` only accepts the signed-in account. Access tokens stay memory-only, browser refresh tokens stay memory-only, and native storage still uses the existing secure-storage abstraction.
+- Validation and evidence: The new tests were written first and run against the old code: C-RACE-01, -02, -03, -04 and the late-profile guard FAILED (`expected 'signed-in' to be 'signed-out'`); C-RACE-05 and -06 passed. After the fix all 7 pass; full suite 81/81; lint, typecheck, build and diff check passed. One existing test needed a timing change (it now waits for the queued storage read before emitting the mocked response); its assertions are unchanged.
+- Contracts / risks / dependencies: No API, DTO or server behaviour change. valryde-api `main` advanced to `827738c`; the only auth-relevant change is additive (429 `RATE_LIMITED`) and already handled. Device Keychain/Keystore verification remains pending.
+- Commit/PR link or SHA (if available): Correction commit on PR #4 https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (SHA in the PR reply).
+- Next action / owner gate: Agent G re-review; do not merge without owner authorization.
 
 ### 2026-10-21 11:00 +08:00 — Checklist 22 commuter auth implemented and verified against the real API
 
