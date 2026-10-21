@@ -21,6 +21,7 @@ import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { debounceTime, distinctUntilChanged, firstValueFrom, map } from 'rxjs';
 import { ApiFailure, failureCopy, toApiFailure } from '../../core/api-failure';
 import { StatePanelComponent } from '../../shared/state-panel.component';
+import { RouteCacheService, savedAtLabel } from './route-cache.service';
 import { RouteListItemComponent } from './route-list-item.component';
 import { TransitRoute, TransitRoutesService } from './transit-routes.service';
 import { TripPlannerGateComponent } from './trip-planner-gate.component';
@@ -129,7 +130,13 @@ type ListStatus = 'loading' | 'ready' | 'error';
                 />
               }
             } @else {
-              <p class="result-count" aria-live="polite">{{ countLabel() }}</p>
+              @if (offlineSavedAt(); as at) {
+                <p class="offline-note" role="status">
+                  You’re offline. Showing routes saved {{ savedLabel(at) }}; search needs a connection.
+                </p>
+              } @else {
+                <p class="result-count" aria-live="polite">{{ countLabel() }}</p>
+              }
               <ion-list>
                 @for (route of routes(); track route.id) {
                   <app-route-list-item [route]="route" (selected)="open($event)" />
@@ -163,6 +170,11 @@ type ListStatus = 'loading' | 'ready' | 'error';
       width: 80%;
       height: 14px;
     }
+    .offline-note {
+      margin: 12px 16px 0;
+      font-size: 14px;
+      color: var(--valryde-warning);
+    }
     .result-count {
       margin: 12px 16px 0;
       font-size: 14px;
@@ -181,6 +193,7 @@ type ListStatus = 'loading' | 'ready' | 'error';
 export class RoutesPage {
   private readonly service = inject(TransitRoutesService);
   private readonly router = inject(Router);
+  private readonly cache = inject(RouteCacheService);
 
   readonly search = new FormControl('', { nonNullable: true, validators: [Validators.maxLength(160)] });
   readonly mode = signal<'routes' | 'trip'>('routes');
@@ -189,6 +202,9 @@ export class RoutesPage {
   readonly routes = signal<TransitRoute[]>([]);
   readonly failure = signal<ApiFailure | null>(null);
   readonly loadMoreFailed = signal(false);
+  /** Set when the list shows the offline copy (unfiltered first page only) instead of live data. */
+  readonly offlineSavedAt = signal<number | null>(null);
+  protected readonly savedLabel = savedAtLabel;
   private readonly page = signal(0);
   private readonly totalPages = signal(0);
   private readonly total = signal(0);
@@ -237,11 +253,24 @@ export class RoutesPage {
       this.page.set(result.pagination.page);
       this.totalPages.set(result.pagination.totalPages);
       this.total.set(result.pagination.total);
+      this.offlineSavedAt.set(null);
       this.status.set('ready');
     } catch (error) {
       if (seq !== this.requestSeq) return;
       if (reset) {
-        this.failure.set(toApiFailure(error));
+        const failure = toApiFailure(error);
+        // Only the unfiltered list has an offline copy; offline search is deliberately unsupported.
+        const saved = failure.kind === 'network' && !this.query() ? this.cache.list() : null;
+        if (saved) {
+          this.routes.set(saved.value.routes);
+          this.page.set(1);
+          this.totalPages.set(1); // no paging while offline
+          this.total.set(saved.value.routes.length);
+          this.offlineSavedAt.set(saved.savedAt);
+          this.status.set('ready');
+          return;
+        }
+        this.failure.set(failure);
         this.status.set('error');
       } else {
         this.loadMoreFailed.set(true);

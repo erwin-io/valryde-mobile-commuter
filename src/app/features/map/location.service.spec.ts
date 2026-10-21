@@ -44,4 +44,53 @@ describe('LocationService', () => {
     TestBed.resetTestingModule();
     expect(await setup({ permission: 'granted' }).isGranted()).toBe(true);
   });
+
+  describe('watch (follow mode)', () => {
+    type Callback = (position: { coords: { latitude: number; longitude: number } } | null, error?: unknown) => void;
+
+    function setupWatch(permission = 'granted') {
+      const state: { callback?: Callback; cleared: string[] } = { cleared: [] };
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          {
+            provide: GEOLOCATION,
+            useValue: {
+              checkPermissions: () => Promise.resolve({ location: permission, coarseLocation: permission }),
+              watchPosition: (_options: unknown, callback: Callback) => {
+                state.callback = callback;
+                return Promise.resolve('watch-1');
+              },
+              clearWatch: ({ id }: { id: string }) => {
+                state.cleared.push(id);
+                return Promise.resolve();
+              },
+            },
+          },
+        ],
+      });
+      return { service: TestBed.inject(LocationService), state };
+    }
+
+    it('delivers [longitude, latitude] updates until stopped, then clears the watch', async () => {
+      const { service, state } = setupWatch();
+      const positions: unknown[] = [];
+      const stop = await service.watch((p) => positions.push(p), vi.fn());
+      state.callback?.({ coords: { latitude: 10.31, longitude: 123.89 } });
+      stop();
+      state.callback?.({ coords: { latitude: 10.4, longitude: 123.9 } });
+      expect(positions).toEqual([[123.89, 10.31]]);
+      expect(state.cleared).toEqual(['watch-1']);
+    });
+
+    it('reports a denied watch once and stops it', async () => {
+      const { service, state } = setupWatch('denied');
+      const onError = vi.fn();
+      await service.watch(vi.fn(), onError);
+      state.callback?.(null, new Error('denied'));
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(onError).toHaveBeenCalledWith({ kind: 'denied' });
+      expect(state.cleared).toEqual(['watch-1']);
+    });
+  });
 });

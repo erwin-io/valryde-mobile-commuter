@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { TimeoutError } from 'rxjs';
 
 /** UI-level failure categories. Raw server messages are never shown to commuters. */
 export type ApiFailureKind = 'network' | 'not-found' | 'rate-limited' | 'unavailable';
@@ -10,6 +11,8 @@ export interface ApiFailure {
 }
 
 export function toApiFailure(error: unknown): ApiFailure {
+  // A request that outlived its timeout is treated like no connection (slow or captive network).
+  if (error instanceof TimeoutError) return { kind: 'network' };
   if (!(error instanceof HttpErrorResponse)) return { kind: 'unavailable' };
   const requestId: string | undefined = error.error?.error?.requestId;
   // Status 0: no HTTP response (offline, DNS, CORS, or API down).

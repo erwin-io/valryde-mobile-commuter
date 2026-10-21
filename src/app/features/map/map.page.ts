@@ -1,4 +1,4 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
@@ -11,7 +11,7 @@ import { IonModal } from '@ionic/angular/ion-modal';
 import { IonSpinner } from '@ionic/angular/ion-spinner';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
-import { locateOutline, searchOutline } from 'ionicons/icons';
+import { locateOutline, navigate, searchOutline } from 'ionicons/icons';
 import { APP_CONFIG } from '../../core/app-config';
 import { RouteDetailComponent } from '../routes/route-detail.component';
 import { RouteSelectionService } from '../routes/route-selection.service';
@@ -42,6 +42,7 @@ import { TransitMapComponent } from './transit-map.component';
         [userLocation]="userLocation()"
         [routeLine]="selection.line()"
         [bottomInset]="sheetInset"
+        (userPanned)="stopFollowing()"
       />
       <div class="map-search">
         <ion-button expand="block" color="light" (click)="openSearch()">
@@ -51,15 +52,16 @@ import { TransitMapComponent } from './transit-map.component';
       </div>
       <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="recenter">
         <ion-fab-button
-          color="light"
-          aria-label="Show my location"
+          [color]="following() ? 'primary' : 'light'"
+          [attr.aria-label]="following() ? 'Stop following my location' : 'Show and follow my location'"
+          [attr.aria-pressed]="following()"
           [disabled]="locating()"
           (click)="recenter()"
         >
           @if (locating()) {
             <ion-spinner aria-hidden="true" />
           } @else {
-            <ion-icon name="locate-outline" aria-hidden="true" />
+            <ion-icon [name]="following() ? 'navigate' : 'locate-outline'" aria-hidden="true" />
           }
         </ion-fab-button>
       </ion-fab>
@@ -119,14 +121,22 @@ export class MapPage {
 
   readonly userLocation = signal<LngLat | null>(null);
   readonly locating = signal(false);
+  /** Follow mode: the camera tracks foreground position updates until the user pans or taps again. */
+  readonly following = signal(false);
   private explained = false;
+  private stopWatch?: () => void;
 
   constructor() {
-    addIcons({ locateOutline, searchOutline });
+    addIcons({ locateOutline, navigate, searchOutline });
+    inject(DestroyRef).onDestroy(() => this.stopFollowing());
     // ?route=<id>&direction=<id> keeps the selection deep-linkable and back-navigable.
     inject(ActivatedRoute)
       .queryParamMap.pipe(takeUntilDestroyed())
-      .subscribe((params) => this.selection.select(params.get('route'), params.get('direction')));
+      .subscribe((params) => {
+        // Fitting a selected route and following the user would fight over the camera.
+        if (params.get('route')) this.stopFollowing();
+        this.selection.select(params.get('route'), params.get('direction'));
+      });
     // Use location silently only when already granted; otherwise wait for an explicit tap.
     void this.locateIfGranted();
   }
@@ -148,20 +158,57 @@ export class MapPage {
     void this.router.navigate([], { queryParams: { route: null, direction: null }, replaceUrl: true });
   }
 
+  /** Ionic lifecycle: stop GPS updates while the Map tab is not visible. */
+  ionViewDidLeave(): void {
+    this.stopFollowing();
+  }
+
+  stopFollowing(): void {
+    this.following.set(false);
+    this.stopWatch?.();
+    this.stopWatch = undefined;
+  }
+
   async recenter(): Promise<void> {
     if (this.locating()) return;
+    if (this.following()) {
+      this.stopFollowing();
+      return;
+    }
     if (!this.explained && !(await this.location.isGranted())) {
       this.explained = true;
       if (!(await this.explainLocation())) return;
     }
-    await this.showMyLocation();
+    if (await this.showMyLocation()) await this.startFollowing();
   }
 
   private async locateIfGranted(): Promise<void> {
     if (await this.location.isGranted()) await this.showMyLocation();
   }
 
-  private async showMyLocation(): Promise<void> {
+  private async startFollowing(): Promise<void> {
+    this.following.set(true);
+    const stop = await this.location.watch(
+      (position) => {
+        this.userLocation.set(position);
+        if (this.following()) this.map()?.focus(position, true);
+      },
+      (result) => {
+        this.stopFollowing();
+        void this.toast(
+          result.kind === 'denied'
+            ? 'Location access was turned off, so VALRYDE stopped following you. The map still works.'
+            : 'We lost your location, so VALRYDE stopped following you.',
+        );
+      },
+    );
+    // Following may have ended (pan, tab change, error) while the watch was starting.
+    if (this.following()) this.stopWatch = stop;
+    else stop();
+  }
+
+  /** Locates once and centers the map. Returns true when a position was found. */
+  private async showMyLocation(): Promise<boolean> {
     this.locating.set(true);
     try {
       const result = await this.location.locate();
@@ -169,7 +216,7 @@ export class MapPage {
         case 'located':
           this.userLocation.set(result.position);
           this.map()?.focus(result.position);
-          break;
+          return true;
         case 'denied':
           await this.toast(
             'Location is off for VALRYDE. You can still browse the map, or turn location on in your device settings.',
@@ -182,6 +229,7 @@ export class MapPage {
     } finally {
       this.locating.set(false);
     }
+    return false;
   }
 
   private async explainLocation(): Promise<boolean> {
