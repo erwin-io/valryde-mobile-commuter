@@ -5,8 +5,12 @@ import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
   busOutline,
+  checkmarkCircleOutline,
   cloudOfflineOutline,
   constructOutline,
+  lockClosedOutline,
+  mailOutline,
+  personCircleOutline,
   searchOutline,
 } from 'ionicons/icons';
 
@@ -62,6 +66,16 @@ export class StatePanelComponent {
   readonly action = output<void>();
 
   constructor() {
-    addIcons({ alertCircleOutline, busOutline, cloudOfflineOutline, constructOutline, searchOutline });
+    addIcons({
+      alertCircleOutline,
+      busOutline,
+      checkmarkCircleOutline,
+      cloudOfflineOutline,
+      constructOutline,
+      lockClosedOutline,
+      mailOutline,
+      personCircleOutline,
+      searchOutline,
+    });
   }
 }

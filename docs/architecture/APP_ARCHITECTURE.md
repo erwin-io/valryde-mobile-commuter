@@ -72,3 +72,12 @@ Access tokens remain memory-first; refresh-token secure storage requires a revie
 - **MapLibre worker:** MapLibre 6 resolves its worker relative to its own module URL, which bundling breaks. `angular.json` copies `maplibre-gl-worker.mjs` to `/maplibre/` and `MAP_FACTORY` calls `setWorkerUrl` before creating a map.
 - **Testability seams:** `MAP_FACTORY` (MapLibre construction) and `GEOLOCATION` (Capacitor plugin) are injection tokens so components are tested without WebGL or device APIs.
 - **Capacitor `appId`:** `com.valryde.commuter` is provisional until the owner confirms the store identifier.
+
+## Session and token storage (checklist 22)
+
+- **Access token:** memory only, in `SessionService`; refreshed 30 s before its stated expiry.
+- **Refresh token:** `REFRESH_TOKEN_STORE`. Native builds use `capacitor-secure-storage-plugin@0.13.0` (iOS Keychain, Android Keystore). The browser uses an in-memory store, because the plugin's web fallback is `localStorage`, which the Agent A handoff forbids; a browser reload therefore signs the user out.
+- **Refresh:** single-flight (concurrent callers share one rotation); 400/401/403 clear the session, while network errors, 5xx and rate limits keep the token for a later retry ("Can't restore your session" with Retry).
+- **Interceptor:** attaches `Authorization` only to requests carrying the `REQUIRES_AUTH` context flag; a 401 triggers one refresh and one retry.
+- **Launch:** `provideAppInitializer` starts `restore()` without blocking the map.
+- **Forms:** every `<form>` uses `[formGroup]`; a bare form with `(ngSubmit)` performs a native GET, which reloads the app and drops the in-memory session.

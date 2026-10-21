@@ -71,3 +71,22 @@ Error handling (`src/app/core/api-failure.ts`): status `0` → network; `404` �
 Development connectivity: `ng serve` proxies `/api` to `http://127.0.0.1:3000` (`proxy.conf.json`), and `environment.apiBaseUrl` is `/api`. Native builds need an absolute API origin per environment, plus `https://localhost` in the API's `CORS_ORIGINS` (defect D2).
 
 Still gated: place search and direct discovery (ID 37, gap G6) show a disabled "Plan a trip" form; live jeepneys (29–35) show a note in the route sheet. No fixtures ship in the app.
+
+## Client implementation status (checklist 22 — commuter auth)
+
+| Endpoint(s) | Client | State |
+|---|---|---|
+| `POST /auth/register` (`role: "COMMUTER"`), `/verify-email`, `/resend-verification` | Register page, email-link page (`/auth/verify-email?token=`), sign-in resend | Integrated (real) |
+| `POST /auth/login`, `/refresh`, `/logout` | `SessionService` (single-flight refresh, rotation, local sign-out) | Integrated (real) |
+| `POST /auth/forgot-password`, `/reset-password` | Email-request page; password page (`/auth/reset-password?token=`) | Integrated (real) |
+| `GET/PATCH /auth/me` | Account page (profile, name edit) via the bearer interceptor | Integrated (real) |
+| `POST /auth/me/change-password` | Password page (change); local session ends after 204 | Integrated (real) |
+| `POST /auth/me/change-email`, `/auth/confirm-email-change` | Email-request page; email-link page (`/account/confirm-email-change?token=`); local session ends after confirm | Integrated (real) |
+| `POST /auth/google` | — | Not used (owner client ID gated) |
+
+The link routes match the backend's default `APP_VERIFICATION_URL`, `APP_PASSWORD_RESET_URL` and `APP_EMAIL_CHANGE_URL`. On a phone they still open the web origin until mobile deep links are configured (gap G5).
+
+Observed backend behaviour the client depends on (verified locally on 2026-10-21, no contract change):
+- Refresh rotates. Reusing a rotated refresh token returns `401 SESSION_REVOKED` **and revokes the newest token in that family**, so the client serializes refreshes.
+- Confirming an email change bumps `credentials_version` and revokes all sessions, like a password change. The frontend handoff documents this only for password changes.
+- Logout revokes only the submitted refresh token (the current device).

@@ -6,7 +6,8 @@ The consumer-facing Valryde mobile application repository, owned by Agent C for 
 
 - **Map (23):** MapLibre with a configurable style, opt-in current location, recenter, map-loading/error and offline states.
 - **Routes (24–28):** route search and paginated list from the Agent A public API; a route sheet over the map with direction choice and the official route line.
-- **Gated:** "Plan a trip" (place search and direct discovery, backend gap G6) and live jeepneys (Agent B). Favorites and Account show "not available yet".
+- **Account (22):** commuter registration, email verification, sign-in, profile, change email/password, sign-out and password reset against the Agent A auth API. The refresh token is kept in the iOS Keychain / Android Keystore on native builds and in memory only in the browser.
+- **Gated:** "Plan a trip" (place search and direct discovery, backend gap G6) and live jeepneys (Agent B). Favorites shows "not available yet".
 
 To use real data locally, run `valryde-api` on `127.0.0.1:3000`; `npm start` proxies `/api` to it (`proxy.conf.json`).
 
