@@ -2,67 +2,89 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-21T10:20:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-21T18:35:00+08:00
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/24-28-route-discovery`, based on `main` `38638b5c4c643eaea26eebf89bdc0680e0af7f68` (PR #2 merge); the final head SHA is in the PR.
-- Repository status: Checklist 23 accepted and merged (PR #2). The checklist 24–28 transit-discovery slice is committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` (Codex reference output) and `.claude/` (local preview config) are intentionally not committed.
-- Execution agent: Claude (took over from Codex on 2026-10-21; no prior work discarded).
-- Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1, issued 2026-10-19; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
+- Branch / HEAD SHA: `feat/22-commuter-auth` (PR #4), based on `main` `0418722`; the correction commit SHA is in the PR #4 reply.
+- Repository status: Checklists 23 and 24–28 merged (PR #2, PR #3). The checklist 22 commuter-auth slice is committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` and `.claude/` (local preview config, PR drafts, local-only test-account values) are intentionally not committed.
+- Execution agent: Claude (took over from Codex on 2026-10-21).
+- Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PR #2 (checklist 23) merged as `38638b5`. Checklist 24–28 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/3 (`feat/24-28-route-discovery` → `main`, open, awaiting Tech Lead review; not to be self-merged).
-- Implementation progress: READY_FOR_REVIEW (checklists 24–28 transit discovery); 23 DONE_AFTER_ACCEPTANCE.
-- Tech Lead review decision (if actually issued): PR #2 accepted and merged by the owner/Tech Lead (next development release, 2026-10-21). The 24–28 PR is not reviewed yet.
-- Current objective: Tech Lead review of checkpoint `AGENT_C_TRANSIT_UX_READY_FOR_REVIEW`.
-- Last confirmed result: The route search/list, gated trip planner, route detail sheet with direction choice, and official route line build, lint, typecheck and pass 39 tests. Verified against the real local Agent A API (empty database) for empty, no-match and not-found states; the populated list/detail/line flow was verified with a browser-only mocked response.
-- Next concrete action: Address Tech Lead review. Then choose the next slice: checklist 22 (commuter auth, verified Agent A contracts) or 36 favorites (needs a device-local vs backend decision).
-- Blocked by / decision owner: Real populated-data verification needs Admin-created routes in a dev database (owner). Place search and direct discovery (ID 37, gap G6) need a backend owner (Tech Lead). Live tracking (29–35) needs Agent B contracts.
-- Dependencies / affected agents: Agent A (transit routes, auth, D1/D2 defects), Agent B (tracking/Pusher), Agent E (Admin route data entry), Tech Lead G (G6 owner, review).
+- GitHub issues / PRs: PR #2 merged (`38638b5`), PR #3 merged (`0418722`). Checklist 22 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (`feat/22-commuter-auth` → `main`, open, awaiting Tech Lead review; not to be self-merged).
+- Implementation progress: READY_FOR_REVIEW (checklist 22, security correction applied); 23–28 DONE_AFTER_ACCEPTANCE.
+- Tech Lead review decision (if actually issued): PR #4 CHANGES REQUIRED at `314051f`: a refresh response arriving after `signOut()` could re-authenticate and persist a refresh token. Correction submitted on the same PR; awaiting Agent G re-review. Earlier: PR #2 and PR #3 accepted and merged; 650 kB budget approved; Cebu City default center; ID 37 blocked on G6.
+- Current objective: Agent G re-review of the PR #4 session-concurrency correction.
+- Last confirmed result: Session generation invalidation and ordered storage fix the late-result defect: regression tests C-RACE-01…06 pass (C-RACE-01…04 failed before the fix); 81 tests pass; lint, typecheck and build pass.
+- Next concrete action: Address Tech Lead review. Candidate next slice: 36 favorites (needs a device-local vs backend decision) or tracking once Agent B contracts are accepted.
+- Blocked by / decision owner: Physical-device verification (owner); ID 37 needs G6 (Agent A); 29–35 need Agent B contracts; mobile deep links for emailed links (G5, owner).
+- Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
 
 ## Checklist coverage
 
 | Checklist ID | Feature / slice | Progress | Evidence (files/tests/PR) | Blocker / next action |
 |---:|---|---|---|---|
-| 22 | Commuter signup/login/profile | NOT_STARTED | Account tab shows "not available yet" | Verified Agent A auth contract available; candidate next slice |
-| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE | PR #2 merged `38638b5` | Native device verification still pending |
-| 24 | Route/transit search | READY_FOR_REVIEW | `routes.page.ts` debounced `q`; real API no-match screenshot | Tech Lead review |
-| 25 | Route/transit list | READY_FOR_REVIEW | Paginated list, infinite scroll, pull-to-refresh, empty/error states | Tech Lead review |
-| 26 | Route details drawer/filter | READY_FOR_REVIEW | `route-detail.component.ts` in an Ionic sheet modal; not-found/error states | Tech Lead review |
-| 27 | Route direction selection | READY_FOR_REVIEW | Direction segment; `?direction=` deep link | Tech Lead review |
-| 28 | Official route line on map | READY_FOR_REVIEW | Validated LineString, route color + casing, fit-to-route above sheet | Tech Lead review; real geometry not yet seen |
-| 29–35 | Live availability/movement/details/status | NOT_STARTED | Gated note in route sheet only | Approved Agent B public snapshot and realtime contracts |
-| 36 | Available count/favorites | NOT_STARTED | Favorites tab placeholder | Approved persistence decision |
-| 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" segment with disabled From/To fields and an explanation | Backend G6 (`places`, `transit-discovery`) unassigned |
+| 22 | Commuter signup/login/profile | READY_FOR_REVIEW | `src/app/core/auth/*`, `src/app/features/account/*`; 33 auth tests; real-API run; 13 screenshots in `docs/testing/evidence/checklist-22/` | Tech Lead review; native secure storage untested on a device |
+| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE | PR #2; default center now Cebu City | Native device verification pending |
+| 24–28 | Route search/list/details/direction/line | DONE_AFTER_ACCEPTANCE | PR #3 | Real populated route data still unverified |
+| 29–35 | Live availability/movement/details/status | NOT_STARTED | Gated note only | Approved Agent B contracts |
+| 36 | Available count/favorites | NOT_STARTED | Favorites tab placeholder | Persistence decision |
+| 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" gated form | Agent A G6 |
 
 ## Latest verification
 
 | Command / check | Environment | Result | Date/time | Evidence / notes |
 |---|---|---|---|---|
-| `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:16 +08:00 | No findings (incl. template accessibility rules). |
-| `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:16 +08:00 | App + spec tsconfigs. |
-| `npm test` | Local Windows, jsdom | PASSED | 2026-10-21 10:16 +08:00 | 8 files, 39 tests. All use test doubles (fake HTTP via `HttpTestingController`/stubbed services, fake MapLibre). |
-| `npm run build` (production) | Local Windows | PASSED | 2026-10-21 10:16 +08:00 | Initial 603 kB raw / 159 kB transfer; warning budget raised 600→650 kB (see architecture doc). |
-| `git diff --check` | Local repository | PASSED | 2026-10-21 10:16 +08:00 | Only LF→CRLF notices. |
-| Real API integration (browser via `ng serve` proxy) | Local `valryde-api` `origin/main` running read-only at 127.0.0.1:3000 against the existing dev DB (0 routes) | PASSED | 2026-10-21 05:20–10:10 +08:00 | `GET /api/transit-routes` → 200 empty → "No routes published yet"; `q=17B` → "No routes match"; `GET /api/transit-routes/not-a-real-route` → 400 → "Route not found". |
-| Populated flow (list → sheet → direction → line) | Browser, `window.fetch` patched in the tab only | PASSED (MOCKED) | 2026-10-21 10:10 +08:00 | Two fictional Cebu routes shaped like the OpenAPI DTO, labelled "MOCKED FOR SCREENSHOT". No mock code in the app. |
-| Android build / physical device | — | NOT_RUN | — | Android platform not added. |
+| `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:54 +08:00 | No findings. |
+| `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | App + spec. |
+| `npm test` | Local Windows, jsdom | PASSED | 2026-10-21 18:30 +08:00 | 12 files, 81 tests. PR #4 correction: C-RACE-01…06 plus a late-profile-update guard; before the fix 5 of these 7 failed (C-RACE-01…04 and the guard). |
+| PR #4 correction gates: `npm run lint`, `npm run typecheck`, `npm run build`, `git diff --check` | Local Windows | PASSED | 2026-10-21 18:30 +08:00 | Initial bundle 641 kB raw / 171 kB transfer. |
+| Agent A auth contract re-check | `valryde-api` `origin/main` `827738c` vs audited `4a9a152` (source diff) | PASSED | 2026-10-21 18:30 +08:00 | Request/response shapes unchanged. Additive: rate limits now return `429 RATE_LIMITED` (D1 fixed in `34cc664`); already handled and now pinned by C-RACE-06. Live API not re-run for this correction. |
+| `npm run build` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | Initial 640 kB raw / 171 kB transfer (under the approved 650 kB warning). |
+| `git diff --check` | Local repository | PASSED | 2026-10-21 10:54 +08:00 | — |
+| Real API auth flow in browser (`ng serve` proxy → local `valryde-api` `origin/main`; local SMTP sink in place of Mailpit) | Localhost only; generated `@example.test` account; values kept in untracked `.claude/` | PASSED | 2026-10-21 10:44–10:52 +08:00 | register 201; login before verify 403 `EMAIL_NOT_VERIFIED`; verify-email 200, reuse 400 `INVALID_CHALLENGE`; login 200; forced expiry → refresh 200 → `PATCH /auth/me` 200; change-email 202; confirm 200; change-password 204; logout 204; forgot-password 202; reset-password 204; login with reset password 200. |
+| Server rotation/revocation (direct API) | Local API | PASSED | 2026-10-21 10:52 +08:00 | Refresh rotates; reusing a rotated token → 401 `SESSION_REVOKED` and also revokes the newest token in the family; refresh after logout → 401; old password → 401 `INVALID_CREDENTIALS`. |
+| Native secure storage (Keychain/Keystore) | — | NOT_RUN | — | Android platform not added; browser uses memory-only storage. |
+| `npm audit` | Local repository | 4 high, 3 moderate | 2026-10-21 10:30 +08:00 | All dev tooling: `@angular/build`/`vite` (launch-editor), `@angular/cli` (MCP SDK), `@capacitor/cli` (`uuid`/`xcode`). Not shipped; npm's only fixes are major downgrades. The new plugin adds none. |
 
 ## Shared contract / risk changes
 
-- API/DTO/schema/migration changes: None. Consumes the merged Agent A `GET /api/transit-routes` and `GET /api/transit-routes/{routeId}` exactly as in `AGENT_A_OPENAPI_AUDIT.json`.
-- Auth/RBAC/data-isolation impact: None (public endpoints; no tokens).
-- Realtime/Traccar/geospatial impact: None. No vehicle data; route geometry is drawn as delivered (validated, never repaired).
-- Secrets/security/privacy impact: No secrets. Location stays on-device. Error UI shows only safe copy plus the server `requestId`.
-- Required Tech Lead or owner decision: G6 backend owner for ID 37; approve the 650 kB warning budget; seed or authorize dev route data for real populated verification; D1 (rate limit as 500) and D2 (Capacitor CORS origin) remain Agent A items.
+- API/DTO/schema/migration changes: None. Consumes the 14 merged `/api/auth/*` operations (Google sign-in not used) exactly as in `AGENT_A_OPENAPI_AUDIT.json`.
+- Auth/RBAC/data-isolation impact: Bearer tokens are attached only to requests flagged `REQUIRES_AUTH` (the `/auth/me*` calls), never to public route, tile or other-host requests. Registration always sends `role: "COMMUTER"`. The server remains authoritative.
+- Realtime/Traccar/geospatial impact: None.
+- Secrets/security/privacy impact: Access token memory-only. Refresh token in the iOS Keychain / Android Keystore via `capacitor-secure-storage-plugin@0.13.0` on native, memory-only in the browser (the plugin's web fallback is `localStorage`, which the Agent A handoff forbids). Refresh is single-flight. No credentials committed. Test values live only in untracked `.claude/test-accounts.local.env`.
+- Contract observations for the Tech Lead (not changes): (1) confirming an email change bumps `credentials_version` and revokes all sessions (`pg-identity-repository.ts:160-171`); the frontend handoff mentions this only for password changes. (2) Reusing a rotated refresh token revokes the whole token family.
+- Required Tech Lead or owner decision: Re-review PR #4; G5 mobile deep links for emailed links. The secure-storage plugin is provisionally accepted for development.
 
 ## Operator / hardware / external gates
 
-- Gate: Android build and physical-device verification (location, sheet gestures, safe areas, API over `adb reverse`).
-- Required actor: Owner/operator with an Android SDK and device; native builds also need an absolute `apiBaseUrl` and D2 resolved.
-- Requested evidence: `npx cap add android`/`sync` output; device screenshots of the map, route list and route sheet.
-- State: OWNER_VERIFICATION_PENDING (not yet attempted).
+- Gate: Android build and physical-device verification (Keystore storage across restarts, sign-in, emailed links).
+- Required actor: Owner/operator with an Android SDK and device; needs an absolute `apiBaseUrl`, D2 (CORS `https://localhost`), and G5 for links to open the app.
+- Requested evidence: `npx cap add android`/`sync` output; restart-persistence check; device screenshots.
+- State: OWNER_VERIFICATION_PENDING (not attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-21 18:35 +08:00 — PR #4 security correction: session concurrency
+
+- Action / reason: Agent G (CHANGES REQUIRED at `314051f`) found that `SessionService` accepted an in-flight refresh response after `signOut()` and persisted a new refresh token.
+- Checklist/issue: 22; PR #4.
+- Files/config/services affected: `src/app/core/auth/session.service.ts`, `src/app/core/auth/session.service.spec.ts`, this status.
+- Observed result (success/failure/rollback): Cause: sign-in, refresh and restore results were applied unconditionally after their awaits; `rotation` survived a sign-out; storage writes and clears were unordered. Fix: a session generation counter bumped synchronously by every sign-out and local clear, and checked after each await; single-flight refresh scoped to its generation; refresh-token reads, writes and clears run through one ordered queue; a late token is never stored and is revoked server-side (best effort); `setUser` only accepts the signed-in account. Access tokens stay memory-only, browser refresh tokens stay memory-only, and native storage still uses the existing secure-storage abstraction.
+- Validation and evidence: The new tests were written first and run against the old code: C-RACE-01, -02, -03, -04 and the late-profile guard FAILED (`expected 'signed-in' to be 'signed-out'`); C-RACE-05 and -06 passed. After the fix all 7 pass; full suite 81/81; lint, typecheck, build and diff check passed. One existing test needed a timing change (it now waits for the queued storage read before emitting the mocked response); its assertions are unchanged.
+- Contracts / risks / dependencies: No API, DTO or server behaviour change. valryde-api `main` advanced to `827738c`; the only auth-relevant change is additive (429 `RATE_LIMITED`) and already handled. Device Keychain/Keystore verification remains pending.
+- Commit/PR link or SHA (if available): Correction commit on PR #4 https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (SHA in the PR reply).
+- Next action / owner gate: Agent G re-review; do not merge without owner authorization.
+
+### 2026-10-21 11:00 +08:00 — Checklist 22 commuter auth implemented and verified against the real API
+
+- Action / reason: The Tech Lead next release made checklist 22 the priority; also applied the Cebu City default center.
+- Checklist/issue: 22.
+- Files/config/services affected: `src/app/core/auth/*` (API client, session, interceptor, token store, guard, error copy, tests), `src/app/features/account/*` (account, sign-in, register, email request, password, email-link pages, tests), `app.config.ts`, `app.routes.ts`, `state-panel.component.ts`, `environment.ts`, `package.json`/lock (`capacitor-secure-storage-plugin@0.13.0`), evidence screenshots, docs.
+- Observed result (success/failure/rollback): Success. Live testing found and fixed three defects: (1) the profile-name and email-request forms lacked `[formGroup]`, so submit did a native GET that reloaded the app and dropped the session; (2) emails with stray spaces failed validation before trimming; (3) after confirming an email change the app kept a session the API had revoked; it now signs out locally and asks the user to sign in with the new email.
+- Validation and evidence: Gates passed; the real-API flow and server rotation checks are in Latest verification; screenshots in `docs/testing/evidence/checklist-22/`.
+- Contracts / risks / dependencies: No contract change. While testing, another local app on `http://localhost:8100` (likely Agent D) used the same API and the SMTP sink I started; its data was not touched, and captured mail was deleted afterwards. The local API, SMTP sink and preview were stopped.
+- Commit/PR link or SHA (if available): PR #4 https://github.com/erwin-io/valryde-mobile-commuter/pull/4; commit `098b7a0` plus this status-only commit.
+- Next action / owner gate: Tech Lead review; physical-device verification.
 
 ### 2026-10-21 10:20 +08:00 — Checklists 24–28 transit discovery slice implemented
 

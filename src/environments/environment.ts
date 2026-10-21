@@ -5,7 +5,7 @@ export const environment: AppConfig = {
   apiBaseUrl: '/api',
   // OpenFreeMap is the approved MVP reference style; swap per environment without code changes.
   mapStyleUrl: 'https://tiles.openfreemap.org/styles/liberty',
-  // Metro Manila overview until the user opts in to location.
-  defaultCenter: [121.0, 14.6],
-  defaultZoom: 11,
+  // Cebu City overview (Tech Lead decision for the initial MVP) until the user opts in to location.
+  defaultCenter: [123.8854, 10.3157],
+  defaultZoom: 12,
 };

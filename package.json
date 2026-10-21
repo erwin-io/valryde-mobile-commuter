@@ -21,6 +21,7 @@
     "@capacitor/core": "8.5.3",
     "@capacitor/geolocation": "8.2.4",
     "@ionic/angular": "9.0.8",
+    "capacitor-secure-storage-plugin": "0.13.0",
     "ionicons": "8.1.0",
     "maplibre-gl": "6.15.0",
     "rxjs": "7.8.2",
