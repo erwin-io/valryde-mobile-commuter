@@ -28,6 +28,8 @@ export type RouteDetailState =
 /** Bottom-sheet content for one route: identity, explicit direction choice and endpoints. No HTTP. */
 @Component({
   selector: 'app-route-detail',
+  // Ionic sizes modal content through the ion-page layout (header + scrollable content).
+  host: { class: 'ion-page' },
   imports: [
     IonHeader,
     IonToolbar,

@@ -2,64 +2,78 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-21T04:45:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-21T10:20:00+08:00
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/23-map-shell`, based on `main` `f186c4f3fcc3b713589fb370ae33a27e086e94af`; the commit SHAs for this slice are listed in the PR.
-- Repository status: Codex bootstrap/UX documentation and the Claude checklist 23 shell are committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` (Codex's plain Angular CLI reference output) is preserved locally and intentionally not committed.
-- Execution agent: Claude took over from Codex on 2026-10-21 because of Codex usage limits; no prior work was discarded.
-- Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1, issued 2026-10-19; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c` (last changed in `7ec97251`).
+- Branch / HEAD SHA: `feat/24-28-route-discovery`, based on `main` `38638b5c4c643eaea26eebf89bdc0680e0af7f68` (PR #2 merge); the final head SHA is in the PR.
+- Repository status: Checklist 23 accepted and merged (PR #2). The checklist 24–28 transit-discovery slice is committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` (Codex reference output) and `.claude/` (local preview config) are intentionally not committed.
+- Execution agent: Claude (took over from Codex on 2026-10-21; no prior work discarded).
+- Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1, issued 2026-10-19; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: Issue https://github.com/erwin-io/valryde-mobile-commuter/issues/1; PR https://github.com/erwin-io/valryde-mobile-commuter/pull/2 (`feat/23-map-shell` → `main`, open, awaiting Tech Lead review; not to be self-merged).
-- Implementation progress: READY_FOR_REVIEW (checklist 23 shell and UX contract)
-- Tech Lead review decision (if actually issued): Not reviewed
-- Current objective: Tech Lead review of PR #2 of `UX_CONTRACT_READY` and the checklist 23 map-first shell.
-- Last confirmed result: The Ionic/Angular/Capacitor/MapLibre shell builds, lints, typechecks and passes 13 unit/component tests; the map renders the OpenFreeMap style in a browser at 390×844 and 320×568.
-- Next concrete action: After Tech Lead UX review, implement checklists 24–28 (route search/list/details/direction/line) against verified Agent A `GET /api/transit-routes` and `GET /api/transit-routes/:routeId`.
-- Blocked by / decision owner: Major screen expansion awaits Tech Lead review of the UX contract. Stop registry, place/direct discovery, journey details, live tracking, available counts, realtime, ETA/fare/schedule and favorites sync remain gated by absent or unapproved contracts.
-- Dependencies / affected agents: Agent A (auth/RBAC/transit/place contracts), Agent B (latest-state/compliance/realtime/reconciliation), Agent E (Admin-authored route geometry/color), Tech Lead G (shared-contract and UX review).
+- GitHub issues / PRs: PR #2 (checklist 23) merged as `38638b5`. Checklist 24–28 PR: see the latest activity entry.
+- Implementation progress: READY_FOR_REVIEW (checklists 24–28 transit discovery); 23 DONE_AFTER_ACCEPTANCE.
+- Tech Lead review decision (if actually issued): PR #2 accepted and merged by the owner/Tech Lead (next development release, 2026-10-21). The 24–28 PR is not reviewed yet.
+- Current objective: Tech Lead review of checkpoint `AGENT_C_TRANSIT_UX_READY_FOR_REVIEW`.
+- Last confirmed result: The route search/list, gated trip planner, route detail sheet with direction choice, and official route line build, lint, typecheck and pass 39 tests. Verified against the real local Agent A API (empty database) for empty, no-match and not-found states; the populated list/detail/line flow was verified with a browser-only mocked response.
+- Next concrete action: Address Tech Lead review. Then choose the next slice: checklist 22 (commuter auth, verified Agent A contracts) or 36 favorites (needs a device-local vs backend decision).
+- Blocked by / decision owner: Real populated-data verification needs Admin-created routes in a dev database (owner). Place search and direct discovery (ID 37, gap G6) need a backend owner (Tech Lead). Live tracking (29–35) needs Agent B contracts.
+- Dependencies / affected agents: Agent A (transit routes, auth, D1/D2 defects), Agent B (tracking/Pusher), Agent E (Admin route data entry), Tech Lead G (G6 owner, review).
 
 ## Checklist coverage
 
 | Checklist ID | Feature / slice | Progress | Evidence (files/tests/PR) | Blocker / next action |
 |---:|---|---|---|---|
-| 22 | Commuter signup/login/profile | NOT_STARTED | Account tab shows "not available yet" | Verified Agent A auth contract available; scheduled after route slices |
-| 23 | Landing/map/current location | READY_FOR_REVIEW | `src/app/features/map/*`, `src/app/shell/*`; 13 tests; browser screenshots | Tech Lead review |
-| 24–28 | Route search/list/details/direction/line | IN_PROGRESS | UX and verified API contracts documented; Routes tab placeholder | Tech Lead UX review before major screen expansion |
-| 29–35 | Live availability/movement/details/status | NOT_STARTED | Contract boundary documented only | Approved Agent B public snapshot and realtime contracts |
-| 36 | Available count/favorites | NOT_STARTED | Favorites tab placeholder | Approved persistence/API decision |
-| 37 | Place search/direct transit discovery | NOT_STARTED | Gated in UX contract | Approved normalized place/direct-route API contract |
+| 22 | Commuter signup/login/profile | NOT_STARTED | Account tab shows "not available yet" | Verified Agent A auth contract available; candidate next slice |
+| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE | PR #2 merged `38638b5` | Native device verification still pending |
+| 24 | Route/transit search | READY_FOR_REVIEW | `routes.page.ts` debounced `q`; real API no-match screenshot | Tech Lead review |
+| 25 | Route/transit list | READY_FOR_REVIEW | Paginated list, infinite scroll, pull-to-refresh, empty/error states | Tech Lead review |
+| 26 | Route details drawer/filter | READY_FOR_REVIEW | `route-detail.component.ts` in an Ionic sheet modal; not-found/error states | Tech Lead review |
+| 27 | Route direction selection | READY_FOR_REVIEW | Direction segment; `?direction=` deep link | Tech Lead review |
+| 28 | Official route line on map | READY_FOR_REVIEW | Validated LineString, route color + casing, fit-to-route above sheet | Tech Lead review; real geometry not yet seen |
+| 29–35 | Live availability/movement/details/status | NOT_STARTED | Gated note in route sheet only | Approved Agent B public snapshot and realtime contracts |
+| 36 | Available count/favorites | NOT_STARTED | Favorites tab placeholder | Approved persistence decision |
+| 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" segment with disabled From/To fields and an explanation | Backend G6 (`places`, `transit-discovery`) unassigned |
 
 ## Latest verification
 
 | Command / check | Environment | Result | Date/time | Evidence / notes |
 |---|---|---|---|---|
-| `npm run lint` (ESLint 9 + angular-eslint, incl. template accessibility) | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 04:11 +08:00 | No findings. |
-| `npm run typecheck` (app + spec tsconfigs) | Local Windows | PASSED | 2026-10-21 04:11 +08:00 | Strict TypeScript and strict templates. |
-| `npm test` (Vitest via `@angular/build:unit-test`) | Local Windows, jsdom | PASSED | 2026-10-21 04:11 +08:00 | 3 files, 13 tests: location outcomes, map lifecycle/style-error/retry/user-location layer, recenter permission flow. |
-| `npm run build` (production) | Local Windows | PASSED | 2026-10-21 04:11 +08:00 | Initial 535 kB raw / 140 kB transfer under the 600 kB warning budget; MapLibre worker copied to `/maplibre/`. |
-| Browser smoke test (`npm start`) | Claude browser pane, 390×844 and 320×568 | PASSED | 2026-10-21 04:27 +08:00 | Screenshots in `docs/testing/evidence/checklist-23/`. A hidden browser pane suspends `requestAnimationFrame`, so the map stays in its loading state until frames render (an environment artifact, not an app defect). Map style renders; attribution visible; recenter shows the location explanation; "Not now" leaves the map usable; tabs navigate. Fixed a recenter/attribution overlap at 320 px. |
-| `git diff --check` over the branch commits | Local repository | PASSED | 2026-10-21 04:25 +08:00 | First run flagged 14 Markdown hard-break trailing spaces in bootstrap docs; converted to backslash breaks (same rendering). |
-| `npm audit` | Local repository | 3 moderate | 2026-10-21 04:00 +08:00 | `uuid` via `xcode` via `@capacitor/cli` (iOS build tooling, dev-only, not shipped). npm's only fix is a downgrade; tracked. |
-| Android build / physical device | — | NOT_RUN | — | Android platform not added; native geolocation prompts untested. |
-| Shared policy blob comparison | Local vs `valryde-api` `origin/main` | PASSED | 2026-10-21 03:50 +08:00 | Same Git blob; SHA-256 differs only by working-tree line endings. |
+| `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:16 +08:00 | No findings (incl. template accessibility rules). |
+| `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:16 +08:00 | App + spec tsconfigs. |
+| `npm test` | Local Windows, jsdom | PASSED | 2026-10-21 10:16 +08:00 | 8 files, 39 tests. All use test doubles (fake HTTP via `HttpTestingController`/stubbed services, fake MapLibre). |
+| `npm run build` (production) | Local Windows | PASSED | 2026-10-21 10:16 +08:00 | Initial 603 kB raw / 159 kB transfer; warning budget raised 600→650 kB (see architecture doc). |
+| `git diff --check` | Local repository | PASSED | 2026-10-21 10:16 +08:00 | Only LF→CRLF notices. |
+| Real API integration (browser via `ng serve` proxy) | Local `valryde-api` `origin/main` running read-only at 127.0.0.1:3000 against the existing dev DB (0 routes) | PASSED | 2026-10-21 05:20–10:10 +08:00 | `GET /api/transit-routes` → 200 empty → "No routes published yet"; `q=17B` → "No routes match"; `GET /api/transit-routes/not-a-real-route` → 400 → "Route not found". |
+| Populated flow (list → sheet → direction → line) | Browser, `window.fetch` patched in the tab only | PASSED (MOCKED) | 2026-10-21 10:10 +08:00 | Two fictional Cebu routes shaped like the OpenAPI DTO, labelled "MOCKED FOR SCREENSHOT". No mock code in the app. |
+| Android build / physical device | — | NOT_RUN | — | Android platform not added. |
 
 ## Shared contract / risk changes
 
-- API/DTO/schema/migration changes: None. The shell calls no VALRYDE API.
-- Auth/RBAC/data-isolation impact: None.
-- Realtime/Traccar/geospatial impact: None. No vehicle, Pusher, or Traccar code. The map consumes only the configured public vector style.
-- Secrets/security/privacy impact: No secrets. Device location is foreground-only, requested after an in-app explanation or when already granted, used only on-device for the camera/marker, and never transmitted.
-- Required Tech Lead or owner decision: Review `UX_CONTRACT_READY` and the shell; confirm the provisional Capacitor `appId` `com.valryde.commuter`; confirm OpenFreeMap terms before distribution.
+- API/DTO/schema/migration changes: None. Consumes the merged Agent A `GET /api/transit-routes` and `GET /api/transit-routes/{routeId}` exactly as in `AGENT_A_OPENAPI_AUDIT.json`.
+- Auth/RBAC/data-isolation impact: None (public endpoints; no tokens).
+- Realtime/Traccar/geospatial impact: None. No vehicle data; route geometry is drawn as delivered (validated, never repaired).
+- Secrets/security/privacy impact: No secrets. Location stays on-device. Error UI shows only safe copy plus the server `requestId`.
+- Required Tech Lead or owner decision: G6 backend owner for ID 37; approve the 650 kB warning budget; seed or authorize dev route data for real populated verification; D1 (rate limit as 500) and D2 (Capacitor CORS origin) remain Agent A items.
 
 ## Operator / hardware / external gates
 
-- Gate: Android build and physical-device location verification.
-- Required actor: Owner/operator with a local Android SDK and test device.
-- Requested evidence: `npx cap add android` and `npx cap sync` output, a device screenshot of the permission flow, and the denied-permission fallback.
+- Gate: Android build and physical-device verification (location, sheet gestures, safe areas, API over `adb reverse`).
+- Required actor: Owner/operator with an Android SDK and device; native builds also need an absolute `apiBaseUrl` and D2 resolved.
+- Requested evidence: `npx cap add android`/`sync` output; device screenshots of the map, route list and route sheet.
 - State: OWNER_VERIFICATION_PENDING (not yet attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-21 10:20 +08:00 — Checklists 24–28 transit discovery slice implemented
+
+- Action / reason: The Tech Lead next development release authorized 24–28 after PR #2 merged. Read the Agent A frontend API handoff and the OpenAPI audit merged via valryde-api PR #6 before writing services.
+- Checklist/issue: 24, 25, 26, 27, 28; gated UI for 37.
+- Files/config/services affected: `src/app/core/api-failure.ts`, `src/app/features/routes/*` (service, routes page, list item, badge, detail sheet, selection service, geometry, gated trip planner, tests), `src/app/features/map/{map.page,transit-map.component}.ts`, `app.config.ts`, `app.routes.ts`, `environment.ts`/`app-config.ts` (`apiBaseUrl`), `proxy.conf.json`, `angular.json` (serve proxy, budget), evidence screenshots, docs.
+- Observed result (success/failure/rollback): Success. Browser checks found and fixed three defects: the sheet content collapsed to 56 px (missing `ion-page` host class); the fit-to-route was skipped when a route was chosen from the hidden Routes tab (now deferred until the map has a size); a malformed deep link showed "temporarily unavailable" with Retry (a 400 on detail now means "Route not found").
+- Validation and evidence: Lint, typecheck, 39 tests, build and diff check passed; real-API states and mocked populated flow captured in `docs/testing/evidence/checklist-24-28/`.
+- Contracts / risks / dependencies: No contract change. The local valryde-api was only run (no migrations, no data written, no repo changes).
+- Commit/PR link or SHA (if available): See the PR on `feat/24-28-route-discovery`.
+- Next action / owner gate: Tech Lead review; owner decision on dev route data.
 
 ### 2026-10-21 04:45 +08:00 — Checklist 23 PR submitted for Tech Lead review
 

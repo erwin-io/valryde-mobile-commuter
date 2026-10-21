@@ -76,6 +76,12 @@ describe('RouteSelectionService', () => {
     expect(selection.line()).toBeNull();
   });
 
+  it('treats a rejected route id (400, e.g. a malformed deep link) as not found', () => {
+    selection.select('not-a-uuid', null);
+    responses[0].error(new HttpErrorResponse({ status: 400, error: { error: { code: 'VALIDATION_ERROR', requestId: 'r1' } } }));
+    expect(selection.state()).toEqual({ status: 'error', failure: { kind: 'not-found', requestId: 'r1' } });
+  });
+
   it('ignores a slow response for a route the user already left', () => {
     selection.select('route-1', null);
     selection.select('route-2', null);

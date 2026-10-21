@@ -28,13 +28,33 @@ class FakeMap {
 }
 
 describe('TransitMapComponent', () => {
+  // jsdom has no layout or ResizeObserver: tests control the container size and fire resize callbacks.
+  let resizeCallbacks: (() => void)[];
+  let size: { width: number; height: number };
+  const originalResizeObserver = globalThis.ResizeObserver;
+
   beforeAll(() => {
-    // jsdom has no ResizeObserver.
-    globalThis.ResizeObserver ??= class {
+    globalThis.ResizeObserver = class {
+      constructor(callback: () => void) {
+        resizeCallbacks.push(callback);
+      }
       observe() {}
       disconnect() {}
       unobserve() {}
-    };
+    } as unknown as typeof ResizeObserver;
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => size.width });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get: () => size.height });
+  });
+
+  afterAll(() => {
+    globalThis.ResizeObserver = originalResizeObserver;
+    delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth;
+    delete (HTMLElement.prototype as { clientHeight?: number }).clientHeight;
+  });
+
+  beforeEach(() => {
+    resizeCallbacks = [];
+    size = { width: 390, height: 788 };
   });
 
   let maps: FakeMap[];
@@ -142,6 +162,22 @@ describe('TransitMapComponent', () => {
     // Same direction again (e.g. a re-emitted input) must not move the camera the user may have panned.
     fixture.componentRef.setInput('routeLine', { ...line });
     await fixture.whenStable();
+    expect(maps[0].fitBounds).toHaveBeenCalledOnce();
+  });
+
+  it('defers the fit while the map tab is hidden, then fits once it has a size', async () => {
+    size = { width: 0, height: 0 };
+    const fixture = await render();
+    maps[0].emit('load');
+    fixture.componentRef.setInput('routeLine', line);
+    await fixture.whenStable();
+    expect(maps[0].data['valryde-route'].features).toHaveLength(1);
+    expect(maps[0].fitBounds).not.toHaveBeenCalled();
+
+    size = { width: 390, height: 788 };
+    resizeCallbacks.forEach((callback) => callback());
+    expect(maps[0].fitBounds).toHaveBeenCalledOnce();
+    resizeCallbacks.forEach((callback) => callback());
     expect(maps[0].fitBounds).toHaveBeenCalledOnce();
   });
 

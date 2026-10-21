@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { toApiFailure } from '../../core/api-failure';
@@ -44,7 +45,12 @@ export class RouteSelectionService {
     this.state.set({ status: 'loading' });
     this.request = this.routes.get(routeId).subscribe({
       next: (route) => this.state.set({ status: 'ready', route }),
-      error: (error) => this.state.set({ status: 'error', failure: toApiFailure(error) }),
+      error: (error) => {
+        const failure = toApiFailure(error);
+        // The route id is the only input, so a 400 (e.g. a malformed deep link) means "no such route".
+        if (error instanceof HttpErrorResponse && error.status === 400) failure.kind = 'not-found';
+        this.state.set({ status: 'error', failure });
+      },
     });
   }
 

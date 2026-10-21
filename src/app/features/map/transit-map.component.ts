@@ -123,7 +123,11 @@ export class TransitMapComponent {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       this.init();
-      const observer = new ResizeObserver(() => this.map?.resize());
+      const observer = new ResizeObserver(() => {
+        this.map?.resize();
+        // A route chosen while this tab was hidden is fitted once the map becomes visible.
+        if (this.state() === 'ready') this.fitRouteIfNeeded();
+      });
       observer.observe(this.container().nativeElement);
       destroyRef.onDestroy(() => observer.disconnect());
     });
@@ -235,12 +239,21 @@ export class TransitMapComponent {
       return;
     }
     map.setPaintProperty(ROUTE_LINE_LAYER, 'line-color', line.color);
-    // Fit once per direction so the user's own panning is not undone by unrelated updates.
-    if (this.fittedRouteId === line.id) return;
+    this.fitRouteIfNeeded();
+  }
+
+  /** Fits once per direction so the user's own panning is not undone by unrelated updates. */
+  private fitRouteIfNeeded(): void {
+    const line = this.routeLine();
+    if (!this.map || !line || this.fittedRouteId === line.id) return;
+    const padding = { top: 88, left: 32, right: 32, bottom: this.bottomInset() + 32 };
+    const { clientWidth, clientHeight } = this.container().nativeElement;
+    // A hidden or mid-transition tab has no usable size; MapLibre would silently skip the fit.
+    if (clientHeight <= padding.top + padding.bottom || clientWidth <= padding.left + padding.right) return;
     this.fittedRouteId = line.id;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    map.fitBounds(lineBounds(line.coordinates), {
-      padding: { top: 88, left: 32, right: 32, bottom: this.bottomInset() + 32 },
+    this.map.fitBounds(lineBounds(line.coordinates), {
+      padding,
       maxZoom: 16,
       duration: reduceMotion ? 0 : 600,
     });
