@@ -10,7 +10,7 @@
 - Execution agent: Claude (took over from Codex on 2026-10-21; no prior work discarded).
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1, issued 2026-10-19; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PR #2 (checklist 23) merged as `38638b5`. Checklist 24–28 PR: see the latest activity entry.
+- GitHub issues / PRs: PR #2 (checklist 23) merged as `38638b5`. Checklist 24–28 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/3 (`feat/24-28-route-discovery` → `main`, open, awaiting Tech Lead review; not to be self-merged).
 - Implementation progress: READY_FOR_REVIEW (checklists 24–28 transit discovery); 23 DONE_AFTER_ACCEPTANCE.
 - Tech Lead review decision (if actually issued): PR #2 accepted and merged by the owner/Tech Lead (next development release, 2026-10-21). The 24–28 PR is not reviewed yet.
 - Current objective: Tech Lead review of checkpoint `AGENT_C_TRANSIT_UX_READY_FOR_REVIEW`.
@@ -72,7 +72,7 @@
 - Observed result (success/failure/rollback): Success. Browser checks found and fixed three defects: the sheet content collapsed to 56 px (missing `ion-page` host class); the fit-to-route was skipped when a route was chosen from the hidden Routes tab (now deferred until the map has a size); a malformed deep link showed "temporarily unavailable" with Retry (a 400 on detail now means "Route not found").
 - Validation and evidence: Lint, typecheck, 39 tests, build and diff check passed; real-API states and mocked populated flow captured in `docs/testing/evidence/checklist-24-28/`.
 - Contracts / risks / dependencies: No contract change. The local valryde-api was only run (no migrations, no data written, no repo changes).
-- Commit/PR link or SHA (if available): See the PR on `feat/24-28-route-discovery`.
+- Commit/PR link or SHA (if available): PR #3 https://github.com/erwin-io/valryde-mobile-commuter/pull/3; commits `7689f83`, `d4d517f` plus this status-only commit.
 - Next action / owner gate: Tech Lead review; owner decision on dev route data.
 
 ### 2026-10-21 04:45 +08:00 — Checklist 23 PR submitted for Tech Lead review
