@@ -73,12 +73,20 @@ describe('SessionService', () => {
     expect(await store.read()).toBe('refresh-1');
   });
 
-  it('signs out locally when the refresh token is revoked', async () => {
+  it('signs out locally when the refresh token is revoked, and records that the server ended it', async () => {
     await store.write('refresh-0');
     api.refresh.mockReturnValue(throwError(revoked));
     await session.restore();
     expect(session.status()).toBe('signed-out');
+    expect(session.endedByServer()).toBe(true);
     expect(await store.read()).toBeNull();
+
+    api.login.mockReturnValue(of(bundle(1)));
+    await session.signIn('rider@example.test', 'correct horse battery');
+    expect(session.endedByServer()).toBe(false);
+    api.logout.mockReturnValue(of(null));
+    await session.signOut();
+    expect(session.endedByServer()).toBe(false); // a user sign-out is not a server-ended session
   });
 
   it('keeps the refresh token when the network or server fails, and reports restore-failed', async () => {

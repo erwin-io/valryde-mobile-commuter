@@ -26,6 +26,7 @@ describe('Account pages', () => {
   let api: Record<string, ReturnType<typeof vi.fn>>;
   let session: {
     status: ReturnType<typeof signal<SessionStatus>>;
+    endedByServer: ReturnType<typeof signal<boolean>>;
     user: ReturnType<typeof signal<typeof testUser | null>>;
     signIn: ReturnType<typeof vi.fn>;
     signOut: ReturnType<typeof vi.fn>;
@@ -60,6 +61,7 @@ describe('Account pages', () => {
     };
     session = {
       status: signal<SessionStatus>('signed-out'),
+      endedByServer: signal(false),
       user: signal<typeof testUser | null>(null),
       signIn: vi.fn(),
       signOut: vi.fn(async () => undefined),
@@ -280,6 +282,73 @@ describe('Account pages', () => {
       const { fixture, text } = render(AccountPage);
       await settle(fixture);
       expect(text()).toContain('Can’t restore your session');
+    });
+  });
+
+  describe('C1 auth completion', () => {
+    it('rejects a damaged verification link locally without calling the API, and offers a new email', async () => {
+      const { fixture, text } = render(EmailLinkPage, { kind: 'verify-email', token: 'too-short' });
+      await settle(fixture);
+      expect(api['verifyEmail']).not.toHaveBeenCalled();
+      expect(text()).toContain('incomplete or damaged');
+      expect(text()).toContain('Send a new verification email');
+    });
+
+    it('offers a new verification email when the link has expired', async () => {
+      api['verifyEmail'].mockReturnValue(throwError(() => apiError(400, 'INVALID_CHALLENGE')));
+      const { fixture, text } = render(EmailLinkPage, { kind: 'verify-email', token: 'v'.repeat(32) });
+      await settle(fixture);
+      expect(text()).toContain('Send a new verification email');
+    });
+
+    it('does not offer verification resend on a failed email-change link', async () => {
+      api['confirmEmailChange'].mockReturnValue(throwError(() => apiError(400, 'INVALID_CHALLENGE')));
+      const { fixture, text } = render(EmailLinkPage, { kind: 'confirm-email-change', token: 'c'.repeat(32) });
+      await settle(fixture);
+      expect(text()).not.toContain('Send a new verification email');
+    });
+
+    it('treats an over-long reset token as a damaged link', async () => {
+      const { fixture, text } = render(PasswordPage, { kind: 'reset', token: 'x'.repeat(513) });
+      await settle(fixture);
+      expect(text()).toContain('Open the link from your email');
+    });
+
+    it('resend-verification page sends the trimmed email and answers generically', async () => {
+      const { fixture, page, text } = render(EmailRequestPage, { kind: 'resend-verification' });
+      page.email.setValue(' rider@example.test ');
+      await page.submit();
+      await settle(fixture);
+      expect(api['resendVerification']).toHaveBeenCalledWith('rider@example.test');
+      expect(text()).toContain('If that address still needs verifying');
+    });
+
+    it('explains a disabled account at sign-in (403 FORBIDDEN on login)', async () => {
+      session.signIn.mockRejectedValue(apiError(403, 'FORBIDDEN'));
+      const { fixture, page, text } = render(SignInPage);
+      page.form.setValue({ email: 'rider@example.test', password: 'correct horse battery' });
+      await page.submit();
+      await settle(fixture);
+      expect(text()).toContain('This account is disabled');
+      expect(text()).not.toContain('Resend verification email');
+    });
+
+    it('tells the user when the server ended their session', async () => {
+      session.endedByServer.set(true);
+      const { fixture, text } = render(AccountPage);
+      await settle(fixture);
+      expect(text()).toContain('Your session ended');
+      expect(fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
+    });
+
+    it('error messages are exposed to assistive technology with role="alert"', async () => {
+      session.signIn.mockRejectedValue(apiError(401, 'INVALID_CREDENTIALS'));
+      const { fixture, page } = render(SignInPage);
+      page.form.setValue({ email: 'rider@example.test', password: 'wrong password!!' });
+      await page.submit();
+      await settle(fixture);
+      const alerts = [...fixture.nativeElement.querySelectorAll('[role="alert"]')] as HTMLElement[];
+      expect(alerts.some((el) => el.textContent?.includes('Email or password is incorrect.'))).toBe(true);
     });
   });
 });

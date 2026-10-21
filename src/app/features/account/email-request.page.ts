@@ -17,7 +17,7 @@ import { authErrorMessage } from '../../core/auth/auth-errors';
 import { StatePanelComponent } from '../../shared/state-panel.component';
 import { EMAIL_ERROR, emailValidators, trimmed } from './auth-form';
 
-export type EmailRequestKind = 'forgot-password' | 'change-email';
+export type EmailRequestKind = 'forgot-password' | 'change-email' | 'resend-verification';
 
 const COPY: Record<EmailRequestKind, { title: string; intro: string; label: string; action: string; done: string }> = {
   'forgot-password': {
@@ -27,6 +27,14 @@ const COPY: Record<EmailRequestKind, { title: string; intro: string; label: stri
     action: 'Send reset link',
     // Generic on purpose: the API does not reveal whether an account exists.
     done: 'If an account uses that address, a password reset link is on its way.',
+  },
+  'resend-verification': {
+    title: 'Verify your email',
+    intro: 'Enter the email you registered with and we’ll send a new verification link.',
+    label: 'Email',
+    action: 'Send verification email',
+    // Generic on purpose: the API does not reveal whether an account exists or is already verified.
+    done: 'If that address still needs verifying, a new link is on its way.',
   },
   'change-email': {
     title: 'Change email',
@@ -129,7 +137,11 @@ export class EmailRequestPage {
     this.error.set(null);
     try {
       await firstValueFrom(
-        this.kind() === 'forgot-password' ? this.api.forgotPassword(email) : this.api.requestEmailChange(email),
+        this.kind() === 'forgot-password'
+          ? this.api.forgotPassword(email)
+          : this.kind() === 'resend-verification'
+            ? this.api.resendVerification(email)
+            : this.api.requestEmailChange(email),
       );
       this.sent.set(true);
     } catch (error) {

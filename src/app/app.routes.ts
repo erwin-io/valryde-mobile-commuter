@@ -34,6 +34,11 @@ export const routes: Routes = [
             data: { kind: 'forgot-password' },
           },
           {
+            path: 'resend-verification',
+            loadComponent: () => import('./features/account/email-request.page').then((m) => m.EmailRequestPage),
+            data: { kind: 'resend-verification' },
+          },
+          {
             path: 'change-email',
             canMatch: [signedInGuard],
             loadComponent: () => import('./features/account/email-request.page').then((m) => m.EmailRequestPage),
