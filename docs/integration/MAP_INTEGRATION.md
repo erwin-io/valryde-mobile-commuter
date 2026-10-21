@@ -42,3 +42,11 @@ Selected route uses a casing/outline plus route color for contrast. Fit bounds i
 ## Location privacy
 
 Request foreground location only after contextual explanation or explicit recenter action. The first shell uses location for on-device camera context and does not transmit it. Any future origin-based API request must be documented and consent-aligned.
+
+## Implementation notes (checklists 23–28)
+
+- **Worker:** MapLibre 6 resolves its worker relative to its own module, which bundling breaks. `angular.json` copies `maplibre-gl-worker.mjs` to `/maplibre/`, and `MAP_FACTORY` calls `setWorkerUrl` before creating a map.
+- **Route layers:** one GeoJSON source `valryde-route` with a white casing layer (9 px) under the route-color line (5 px), added before the user-location layer so the dot stays on top.
+- **Geometry gate:** `drawableCoordinates()` accepts only a `LineString` with at least 2 finite positions within ±180/±90. Anything else is not drawn and the sheet says the line can't be shown.
+- **Fit-to-route:** runs once per direction id, with padding for the search bar (top) and the sheet at its initial 0.5 breakpoint (bottom). It is deferred until the map container is large enough, because a route chosen from the Routes tab arrives while the map tab is hidden; the existing `ResizeObserver` retries it.
+- **Selection state:** `?route=<id>&direction=<id>` query parameters drive `RouteSelectionService`, so selections are deep-linkable and back-navigable; closing the sheet clears them.

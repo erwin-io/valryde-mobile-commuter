@@ -3,6 +3,7 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { RouteReuseStrategy, provideRouter, withComponentInputBinding } from '@angular/router';
 import { IonicRouteStrategy } from '@ionic/angular/ionic-route-strategy';
 import { provideIonicAngular } from '@ionic/angular/provide';
@@ -18,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideIonicAngular(),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(withFetch()),
     { provide: APP_CONFIG, useValue: environment },
   ],
 };

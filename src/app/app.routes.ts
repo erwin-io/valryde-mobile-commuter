@@ -11,8 +11,7 @@ export const routes: Routes = [
       },
       {
         path: 'routes',
-        loadComponent: () => import('./shell/pending-feature.page').then((m) => m.PendingFeaturePage),
-        data: { title: 'Routes', body: 'Route search and the route list arrive in the next slice.' },
+        loadComponent: () => import('./features/routes/routes.page').then((m) => m.RoutesPage),
       },
       {
         path: 'favorites',

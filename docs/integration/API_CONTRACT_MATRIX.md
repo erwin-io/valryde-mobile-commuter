@@ -56,3 +56,18 @@ Errors use `{error:{code,message,requestId,details?}}`. The UI maps known codes 
 - Browser: configured reachable API origin, commonly loopback during local development.
 - Android emulator: use an explicitly configured host alias such as `10.0.2.2`; do not hard-code it in services.
 - Physical device: use an explicitly configured HTTPS/LAN origin allowed by backend CORS and network policy.
+
+## Client implementation status (checklists 24–28)
+
+Re-verified on 2026-10-21 against Agent A's frontend handoff (`docs/integration/AGENT_A_FRONTEND_API_INTEGRATION_HANDOFF.md`, merged via valryde-api PR #6) and its OpenAPI snapshot `AGENT_A_OPENAPI_AUDIT.json`. The DTOs above are unchanged.
+
+| Endpoint | Client | State |
+|---|---|---|
+| `GET /api/transit-routes?q&page&pageSize` | `TransitRoutesService.list` → Routes tab | Integrated (real). `q` trimmed, omitted when empty, capped at 160; `pageSize` 20. |
+| `GET /api/transit-routes/{routeId}` | `TransitRoutesService.get` → route sheet on Map | Integrated (real). A `400` (malformed id) or `404` shows "Route not found". |
+
+Error handling (`src/app/core/api-failure.ts`): status `0` → network; `404` → not found; `429` or any response with `retry-after` → rate limited (handles defect D1, where rate limits arrive as `500`); everything else → unavailable. Only safe copy and the server `requestId` are shown.
+
+Development connectivity: `ng serve` proxies `/api` to `http://127.0.0.1:3000` (`proxy.conf.json`), and `environment.apiBaseUrl` is `/api`. Native builds need an absolute API origin per environment, plus `https://localhost` in the API's `CORS_ORIGINS` (defect D2).
+
+Still gated: place search and direct discovery (ID 37, gap G6) show a disabled "Plan a trip" form; live jeepneys (29–35) show a note in the route sheet. No fixtures ship in the app.

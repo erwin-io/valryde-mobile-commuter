@@ -20,8 +20,23 @@ export type MapState = 'initializing' | 'ready' | 'style-error';
 
 export type MapLike = Pick<
   MapLibreMap,
-  'on' | 'remove' | 'resize' | 'easeTo' | 'addSource' | 'addLayer' | 'getSource'
+  | 'on'
+  | 'remove'
+  | 'resize'
+  | 'easeTo'
+  | 'fitBounds'
+  | 'addSource'
+  | 'addLayer'
+  | 'getSource'
+  | 'setPaintProperty'
 >;
+
+/** A validated official route-direction line to draw (Admin-owned geometry and color). */
+export interface RouteLine {
+  id: string;
+  coordinates: LngLat[];
+  color: string;
+}
 
 export const MAP_FACTORY = new InjectionToken<(options: MapOptions) => MapLike>('MAP_FACTORY', {
   providedIn: 'root',
@@ -34,6 +49,9 @@ export const MAP_FACTORY = new InjectionToken<(options: MapOptions) => MapLike>(
 });
 
 const USER_LOCATION_SOURCE = 'valryde-user-location';
+const ROUTE_SOURCE = 'valryde-route';
+const ROUTE_CASING_LAYER = 'valryde-route-casing';
+const ROUTE_LINE_LAYER = 'valryde-route-line';
 
 /** Owns the MapLibre instance, its lifecycle, and declarative layer updates. No HTTP or business rules. */
 @Component({
@@ -90,18 +108,26 @@ export class TransitMapComponent {
   readonly center = input.required<LngLat>();
   readonly zoom = input.required<number>();
   readonly userLocation = input<LngLat | null>(null);
+  readonly routeLine = input<RouteLine | null>(null);
+  /** Pixels hidden by overlays at the bottom (e.g. a sheet), used when fitting a route. */
+  readonly bottomInset = input(0);
 
   readonly state = signal<MapState>('initializing');
 
   private readonly container = viewChild.required<ElementRef<HTMLElement>>('container');
   private readonly createMap = inject(MAP_FACTORY);
   private map?: MapLike;
+  private fittedRouteId?: string;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       this.init();
-      const observer = new ResizeObserver(() => this.map?.resize());
+      const observer = new ResizeObserver(() => {
+        this.map?.resize();
+        // A route chosen while this tab was hidden is fitted once the map becomes visible.
+        if (this.state() === 'ready') this.fitRouteIfNeeded();
+      });
       observer.observe(this.container().nativeElement);
       destroyRef.onDestroy(() => observer.disconnect());
     });
@@ -110,6 +136,11 @@ export class TransitMapComponent {
     effect(() => {
       const position = this.userLocation();
       if (this.state() === 'ready') this.renderUserLocation(position);
+    });
+
+    effect(() => {
+      const line = this.routeLine();
+      if (this.state() === 'ready') this.renderRoute(line);
     });
   }
 
@@ -126,6 +157,7 @@ export class TransitMapComponent {
 
   private init(): void {
     this.state.set('initializing');
+    this.fittedRouteId = undefined;
     const map = this.createMap({
       container: this.container().nativeElement,
       style: this.styleUrl(),
@@ -136,6 +168,22 @@ export class TransitMapComponent {
     this.map = map;
 
     map.on('load', () => {
+      // Route layers first so the user-location dot stays on top. Casing keeps the line legible on any route color.
+      map.addSource(ROUTE_SOURCE, { type: 'geojson', data: emptyCollection() });
+      map.addLayer({
+        id: ROUTE_CASING_LAYER,
+        type: 'line',
+        source: ROUTE_SOURCE,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#FFFFFF', 'line-width': 9 },
+      });
+      map.addLayer({
+        id: ROUTE_LINE_LAYER,
+        type: 'line',
+        source: ROUTE_SOURCE,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#0B6E4F', 'line-width': 5 },
+      });
       map.addSource(USER_LOCATION_SOURCE, { type: 'geojson', data: emptyCollection() });
       map.addLayer({
         id: USER_LOCATION_SOURCE,
@@ -173,10 +221,57 @@ export class TransitMapComponent {
     );
   }
 
+  private renderRoute(line: RouteLine | null): void {
+    const map = this.map;
+    if (!map) return;
+    map.getSource<GeoJSONSource>(ROUTE_SOURCE)?.setData(
+      line
+        ? {
+            type: 'FeatureCollection',
+            features: [
+              { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line.coordinates } },
+            ],
+          }
+        : emptyCollection(),
+    );
+    if (!line) {
+      this.fittedRouteId = undefined;
+      return;
+    }
+    map.setPaintProperty(ROUTE_LINE_LAYER, 'line-color', line.color);
+    this.fitRouteIfNeeded();
+  }
+
+  /** Fits once per direction so the user's own panning is not undone by unrelated updates. */
+  private fitRouteIfNeeded(): void {
+    const line = this.routeLine();
+    if (!this.map || !line || this.fittedRouteId === line.id) return;
+    const padding = { top: 88, left: 32, right: 32, bottom: this.bottomInset() + 32 };
+    const { clientWidth, clientHeight } = this.container().nativeElement;
+    // A hidden or mid-transition tab has no usable size; MapLibre would silently skip the fit.
+    if (clientHeight <= padding.top + padding.bottom || clientWidth <= padding.left + padding.right) return;
+    this.fittedRouteId = line.id;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    this.map.fitBounds(lineBounds(line.coordinates), {
+      padding,
+      maxZoom: 16,
+      duration: reduceMotion ? 0 : 600,
+    });
+  }
+
   private dispose(): void {
     this.map?.remove();
     this.map = undefined;
   }
+}
+
+function lineBounds(coordinates: LngLat[]): [LngLat, LngLat] {
+  const lngs = coordinates.map((c) => c[0]);
+  const lats = coordinates.map((c) => c[1]);
+  return [
+    [Math.min(...lngs), Math.min(...lats)],
+    [Math.max(...lngs), Math.max(...lats)],
+  ];
 }
 
 function emptyCollection(): FeatureCollection {

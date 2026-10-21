@@ -4,7 +4,11 @@ The consumer-facing Valryde mobile application repository, owned by Agent C for 
 
 ## Current state
 
-The checklist 23 map-first shell is implemented: Ionic tabs (Map, Routes, Favorites, Account), a MapLibre map with a configurable style, opt-in current location with a recenter control, and map-loading, map-error and offline states. Routes, Favorites and Account show an honest "not available yet" state until their slices land. No backend API, vehicle, or realtime data is used yet.
+- **Map (23):** MapLibre with a configurable style, opt-in current location, recenter, map-loading/error and offline states.
+- **Routes (24–28):** route search and paginated list from the Agent A public API; a route sheet over the map with direction choice and the official route line.
+- **Gated:** "Plan a trip" (place search and direct discovery, backend gap G6) and live jeepneys (Agent B). Favorites and Account show "not available yet".
+
+To use real data locally, run `valryde-api` on `127.0.0.1:3000`; `npm start` proxies `/api` to it (`proxy.conf.json`).
 
 ## Developer setup
 
