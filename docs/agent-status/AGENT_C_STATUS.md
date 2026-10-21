@@ -10,7 +10,7 @@
 - Execution agent: Claude (took over from Codex on 2026-10-21).
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PR #2 merged (`38638b5`), PR #3 merged (`0418722`). Checklist 22 PR: see the latest activity entry.
+- GitHub issues / PRs: PR #2 merged (`38638b5`), PR #3 merged (`0418722`). Checklist 22 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (`feat/22-commuter-auth` → `main`, open, awaiting Tech Lead review; not to be self-merged).
 - Implementation progress: READY_FOR_REVIEW (checklist 22); 23–28 DONE_AFTER_ACCEPTANCE.
 - Tech Lead review decision (if actually issued): PR #3 accepted and merged. Decisions: 650 kB warning budget approved (1 MB error kept); default map center Cebu City; ID 37 blocked on Agent A G6; next priority checklist 22.
 - Current objective: Tech Lead review of the checklist 22 commuter-auth PR.
@@ -70,7 +70,7 @@
 - Observed result (success/failure/rollback): Success. Live testing found and fixed three defects: (1) the profile-name and email-request forms lacked `[formGroup]`, so submit did a native GET that reloaded the app and dropped the session; (2) emails with stray spaces failed validation before trimming; (3) after confirming an email change the app kept a session the API had revoked; it now signs out locally and asks the user to sign in with the new email.
 - Validation and evidence: Gates passed; the real-API flow and server rotation checks are in Latest verification; screenshots in `docs/testing/evidence/checklist-22/`.
 - Contracts / risks / dependencies: No contract change. While testing, another local app on `http://localhost:8100` (likely Agent D) used the same API and the SMTP sink I started; its data was not touched, and captured mail was deleted afterwards. The local API, SMTP sink and preview were stopped.
-- Commit/PR link or SHA (if available): See the PR on `feat/22-commuter-auth`.
+- Commit/PR link or SHA (if available): PR #4 https://github.com/erwin-io/valryde-mobile-commuter/pull/4; commit `098b7a0` plus this status-only commit.
 - Next action / owner gate: Tech Lead review; physical-device verification.
 
 ### 2026-10-21 10:20 +08:00 — Checklists 24–28 transit discovery slice implemented
