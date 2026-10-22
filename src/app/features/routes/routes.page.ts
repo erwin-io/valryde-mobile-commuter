@@ -18,7 +18,7 @@ import { IonSegmentButton } from '@ionic/angular/ion-segment-button';
 import { IonSkeletonText } from '@ionic/angular/ion-skeleton-text';
 import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
-import { debounceTime, distinctUntilChanged, firstValueFrom, map } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, map, takeUntil } from 'rxjs';
 import { ApiFailure, failureCopy, toApiFailure } from '../../core/api-failure';
 import { StatePanelComponent } from '../../shared/state-panel.component';
 import { RouteCacheService, savedAtLabel } from './route-cache.service';
@@ -202,6 +202,7 @@ export class RoutesPage {
   readonly routes = signal<TransitRoute[]>([]);
   readonly failure = signal<ApiFailure | null>(null);
   readonly loadMoreFailed = signal(false);
+  readonly loadingMore = signal(false);
   /** Set when the list shows the offline copy (unfiltered first page only) instead of live data. */
   readonly offlineSavedAt = signal<number | null>(null);
   protected readonly savedLabel = savedAtLabel;
@@ -209,6 +210,7 @@ export class RoutesPage {
   private readonly totalPages = signal(0);
   private readonly total = signal(0);
   private requestSeq = 0;
+  private requestCancel?: Subject<void>;
 
   protected readonly skeletonRows = [1, 2, 3, 4, 5, 6];
   readonly hasMore = computed(() => this.page() < this.totalPages());
@@ -222,34 +224,48 @@ export class RoutesPage {
   );
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
     this.search.valueChanges
       .pipe(
         debounceTime(300),
         map((value) => value.trim()),
         distinctUntilChanged(),
-        takeUntilDestroyed(inject(DestroyRef)),
+        takeUntilDestroyed(destroyRef),
       )
       .subscribe((q) => {
         this.query.set(q);
         void this.load(true);
       });
+    destroyRef.onDestroy(() => {
+      this.requestSeq++;
+      this.cancelActiveRequest();
+    });
     void this.load(true);
   }
 
-  /** Loads page 1 (reset) or the next page. Responses for superseded queries are dropped. */
+  /** Loads page 1 (reset) or the next page. Superseded HTTP requests are cancelled. */
   async load(reset: boolean): Promise<void> {
+    if (!reset && (this.loadingMore() || !this.hasMore())) return;
     const seq = ++this.requestSeq;
+    this.cancelActiveRequest();
+    const cancel = new Subject<void>();
+    this.requestCancel = cancel;
     const nextPage = reset ? 1 : this.page() + 1;
     if (reset) {
       this.status.set('loading');
       this.loadMoreFailed.set(false);
+      this.loadingMore.set(false);
+    } else {
+      this.loadingMore.set(true);
     }
     try {
       const result = await firstValueFrom(
-        this.service.list({ q: this.query(), page: nextPage, pageSize: PAGE_SIZE }),
+        this.service
+          .list({ q: this.query(), page: nextPage, pageSize: PAGE_SIZE })
+          .pipe(takeUntil(cancel)),
       );
       if (seq !== this.requestSeq) return;
-      this.routes.set(reset ? result.routes : [...this.routes(), ...result.routes]);
+      this.routes.set(reset ? result.routes : mergeUniqueRoutes(this.routes(), result.routes));
       this.page.set(result.pagination.page);
       this.totalPages.set(result.pagination.totalPages);
       this.total.set(result.pagination.total);
@@ -275,6 +291,11 @@ export class RoutesPage {
       } else {
         this.loadMoreFailed.set(true);
       }
+    } finally {
+      if (seq === this.requestSeq) {
+        this.loadingMore.set(false);
+        this.requestCancel = undefined;
+      }
     }
   }
 
@@ -292,4 +313,17 @@ export class RoutesPage {
   open(route: TransitRoute): void {
     void this.router.navigate(['/tabs/map'], { queryParams: { route: route.id } });
   }
+
+  private cancelActiveRequest(): void {
+    this.requestCancel?.next();
+    this.requestCancel?.complete();
+    this.requestCancel = undefined;
+  }
+}
+
+/** Keep a stable route row when pagination shifts while an Admin updates the public catalogue. */
+function mergeUniqueRoutes(current: TransitRoute[], incoming: TransitRoute[]): TransitRoute[] {
+  const routes = new Map(current.map((route) => [route.id, route]));
+  for (const route of incoming) routes.set(route.id, route);
+  return [...routes.values()];
 }

@@ -86,6 +86,7 @@ describe('RoutesPage', () => {
     const { fixture, page: p, text } = await setup();
     p.query.set('17B');
     void p.load(true);
+    expect(responses[0].observed).toBe(false);
     respond(1, page([transitRoute({ routeCode: '17B' })]));
     respond(0, page([transitRoute({ id: 'old', routeCode: '04L' })]));
     await settle(fixture);
@@ -127,6 +128,40 @@ describe('RoutesPage', () => {
     await settle(fixture);
     expect(p.routes().map((r) => r.routeCode)).toEqual(['17B', '62C']);
     expect(p.hasMore()).toBe(false);
+  });
+
+  it('allows only one page request at a time and de-duplicates a shifted page boundary', async () => {
+    const { fixture, page: p } = await setup();
+    respond(0, page([transitRoute()], 1, 2, 2));
+    await settle(fixture);
+
+    const first = p.loadMore();
+    const duplicate = p.loadMore();
+    expect(list).toHaveBeenCalledTimes(2);
+    respond(
+      1,
+      page(
+        [
+          transitRoute({ routeCode: '17B updated' }),
+          transitRoute({ id: 'route-2', routeCode: '62C' }),
+        ],
+        2,
+        2,
+        2,
+      ),
+    );
+    await Promise.all([first, duplicate]);
+    await settle(fixture);
+
+    expect(p.routes().map((route) => route.routeCode)).toEqual(['17B updated', '62C']);
+    expect(p.loadingMore()).toBe(false);
+  });
+
+  it('cancels an unfinished request when the page is destroyed', async () => {
+    const { fixture } = await setup();
+    expect(responses[0].observed).toBe(true);
+    fixture.destroy();
+    expect(responses[0].observed).toBe(false);
   });
 
   it('opens a route on the map via a deep-linkable query parameter', async () => {
