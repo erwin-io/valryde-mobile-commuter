@@ -1,6 +1,6 @@
 import { HttpClient, HttpContext, HttpContextToken } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, timeout } from 'rxjs';
 import { APP_CONFIG } from '../app-config';
 
 // DTOs mirror Agent A's merged OpenAPI (valryde-api docs/integration/AGENT_A_OPENAPI_AUDIT.json).
@@ -29,6 +29,9 @@ export interface TokenBundle {
 /** Set on requests that need `Authorization: Bearer`; the interceptor never adds tokens otherwise. */
 export const REQUIRES_AUTH = new HttpContextToken<boolean>(() => false);
 
+/** Bound authentication requests so captive or half-open mobile networks remain recoverable. */
+export const AUTH_REQUEST_TIMEOUT_MS = 15_000;
+
 /** Agent A `/api/auth/*` endpoints. Registration is always `role: "COMMUTER"` in this app. */
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
@@ -37,62 +40,69 @@ export class AuthApiService {
   private readonly authed = { context: new HttpContext().set(REQUIRES_AUTH, true) };
 
   register(body: { email: string; password: string; displayName: string }): Observable<AuthUser> {
-    return this.http
-      .post<{ user: AuthUser }>(`${this.base}/register`, { ...body, role: 'COMMUTER' })
+    return this.bounded(this.http.post<{ user: AuthUser }>(`${this.base}/register`, { ...body, role: 'COMMUTER' }))
       .pipe(map((r) => r.user));
   }
 
   verifyEmail(token: string): Observable<AuthUser> {
-    return this.http.post<{ user: AuthUser }>(`${this.base}/verify-email`, { token }).pipe(map((r) => r.user));
+    return this.bounded(this.http.post<{ user: AuthUser }>(`${this.base}/verify-email`, { token })).pipe(
+      map((r) => r.user),
+    );
   }
 
   resendVerification(email: string): Observable<unknown> {
-    return this.http.post(`${this.base}/resend-verification`, { email });
+    return this.bounded(this.http.post(`${this.base}/resend-verification`, { email }));
   }
 
   login(email: string, password: string): Observable<TokenBundle> {
-    return this.http.post<TokenBundle>(`${this.base}/login`, { email, password });
+    return this.bounded(this.http.post<TokenBundle>(`${this.base}/login`, { email, password }));
   }
 
   /** Rotates: the submitted refresh token is revoked server-side. */
   refresh(refreshToken: string): Observable<TokenBundle> {
-    return this.http.post<TokenBundle>(`${this.base}/refresh`, { refreshToken });
+    return this.bounded(this.http.post<TokenBundle>(`${this.base}/refresh`, { refreshToken }));
   }
 
   logout(refreshToken: string): Observable<unknown> {
-    return this.http.post(`${this.base}/logout`, { refreshToken });
+    return this.bounded(this.http.post(`${this.base}/logout`, { refreshToken }));
   }
 
   forgotPassword(email: string): Observable<unknown> {
-    return this.http.post(`${this.base}/forgot-password`, { email });
+    return this.bounded(this.http.post(`${this.base}/forgot-password`, { email }));
   }
 
   resetPassword(token: string, password: string): Observable<unknown> {
-    return this.http.post(`${this.base}/reset-password`, { token, password });
+    return this.bounded(this.http.post(`${this.base}/reset-password`, { token, password }));
   }
 
   confirmEmailChange(token: string): Observable<AuthUser> {
-    return this.http
-      .post<{ user: AuthUser }>(`${this.base}/confirm-email-change`, { token })
+    return this.bounded(this.http.post<{ user: AuthUser }>(`${this.base}/confirm-email-change`, { token }))
       .pipe(map((r) => r.user));
   }
 
   me(): Observable<AuthUser> {
-    return this.http.get<{ user: AuthUser }>(`${this.base}/me`, this.authed).pipe(map((r) => r.user));
+    return this.bounded(this.http.get<{ user: AuthUser }>(`${this.base}/me`, this.authed)).pipe(
+      map((r) => r.user),
+    );
   }
 
   updateProfile(displayName: string): Observable<AuthUser> {
-    return this.http
-      .patch<{ user: AuthUser }>(`${this.base}/me`, { displayName }, this.authed)
+    return this.bounded(this.http.patch<{ user: AuthUser }>(`${this.base}/me`, { displayName }, this.authed))
       .pipe(map((r) => r.user));
   }
 
   /** Bumps the credential version: every existing session must sign in again. */
   changePassword(currentPassword: string, newPassword: string): Observable<unknown> {
-    return this.http.post(`${this.base}/me/change-password`, { currentPassword, newPassword }, this.authed);
+    return this.bounded(
+      this.http.post(`${this.base}/me/change-password`, { currentPassword, newPassword }, this.authed),
+    );
   }
 
   requestEmailChange(email: string): Observable<unknown> {
-    return this.http.post(`${this.base}/me/change-email`, { email }, this.authed);
+    return this.bounded(this.http.post(`${this.base}/me/change-email`, { email }, this.authed));
+  }
+
+  private bounded<T>(request: Observable<T>): Observable<T> {
+    return request.pipe(timeout({ first: AUTH_REQUEST_TIMEOUT_MS }));
   }
 }

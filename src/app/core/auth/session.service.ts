@@ -37,7 +37,15 @@ export class SessionService {
   async restore(): Promise<void> {
     const generation = this.generation;
     this.status.set('restoring');
-    const token = await this.queue(() => this.store.read());
+    let token: string | null;
+    try {
+      token = await this.queue(() => this.store.read());
+    } catch {
+      // Native secure storage can be temporarily unavailable (for example while the device is
+      // locked). Keep the session recoverable and never leave the account page stuck restoring.
+      if (generation === this.generation) this.status.set('restore-failed');
+      return;
+    }
     if (generation !== this.generation) return;
     if (!token) {
       this.status.set('signed-out');
@@ -81,12 +89,16 @@ export class SessionService {
   /** Ends the session on this device. Local state is cleared at once, whatever the network outcome. */
   async signOut(): Promise<void> {
     this.invalidate(false);
-    // Queued behind any pending write, so this reads (and revokes) the token that was actually stored.
-    const token = await this.queue(async () => {
-      const stored = await this.store.read();
-      await this.store.clear();
-      return stored;
-    });
+    // Queued behind any pending write, so this reads (and revokes) the token that was actually
+    // stored. Both operations are best-effort: the in-memory session always ends, while a readable
+    // token is still revoked even if native removal fails.
+    let token: string | null = null;
+    try {
+      token = await this.queue(() => this.store.read());
+    } catch {
+      // Still attempt removal below.
+    }
+    await this.queue(() => this.store.clear()).catch(() => undefined);
     if (token) await this.revoke(token);
   }
 
@@ -98,7 +110,7 @@ export class SessionService {
   /** Forget tokens locally, e.g. after a password change revoked every session server-side. */
   async clearLocal(endedByServer = false): Promise<void> {
     this.invalidate(endedByServer);
-    await this.queue(() => this.store.clear());
+    await this.queue(() => this.store.clear()).catch(() => undefined);
   }
 
   /** Synchronously ends the current generation: later results from it are ignored. */
@@ -138,7 +150,19 @@ export class SessionService {
       await this.revoke(bundle.refreshToken);
       return;
     }
-    await this.queue(() => this.store.write(bundle.refreshToken));
+    try {
+      await this.queue(() => this.store.write(bundle.refreshToken));
+    } catch (error) {
+      // A refresh is already rotated by the server at this point. Never claim a durable session
+      // when its replacement token could not be stored, and revoke the newly issued token so it
+      // cannot be stranded outside client control.
+      await this.revoke(bundle.refreshToken);
+      if (generation === this.generation) {
+        this.invalidate(false);
+        await this.queue(() => this.store.clear()).catch(() => undefined);
+      }
+      throw error;
+    }
     // Signed out during the write: the queued sign-out read, revoked and cleared this token.
     if (generation !== this.generation) return;
     this.accessToken = bundle.accessToken;

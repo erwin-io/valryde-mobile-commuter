@@ -15,16 +15,32 @@ describe('secureRefreshTokenStore', () => {
         if (!values.delete(key)) throw new Error('missing');
         return { value: true };
       }),
+      keys: vi.fn(async () => ({ value: [...values.keys()] })),
     };
     const store = secureRefreshTokenStore(plugin);
 
     expect(await store.read()).toBeNull(); // missing key rejects inside the plugin
+    expect(plugin.get).not.toHaveBeenCalled();
     await store.write('refresh-1');
     expect(plugin.set).toHaveBeenCalledWith({ key: 'valryde.refreshToken', value: 'refresh-1' });
     expect(await store.read()).toBe('refresh-1');
     await store.clear();
     await store.clear(); // clearing twice is harmless
     expect(await store.read()).toBeNull();
+  });
+
+  it('propagates native storage failures instead of treating them as a missing session', async () => {
+    const unavailable = new Error('keystore unavailable');
+    const plugin = {
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+      keys: vi.fn().mockRejectedValue(unavailable),
+    };
+    const store = secureRefreshTokenStore(plugin);
+
+    await expect(store.read()).rejects.toBe(unavailable);
+    await expect(store.clear()).rejects.toBe(unavailable);
   });
 });
 

@@ -97,6 +97,74 @@ describe('SessionService', () => {
     expect(await store.read()).toBe('refresh-0');
   });
 
+  it('settles as restore-failed when native secure storage cannot be read', async () => {
+    const unavailable: RefreshTokenStore = {
+      read: vi.fn().mockRejectedValue(new Error('keystore unavailable')),
+      write: vi.fn(),
+      clear: vi.fn(),
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthApiService, useValue: api },
+        { provide: REFRESH_TOKEN_STORE, useValue: unavailable },
+      ],
+    });
+    session = TestBed.inject(SessionService);
+
+    await session.restore();
+
+    expect(session.status()).toBe('restore-failed');
+    expect(api.refresh).not.toHaveBeenCalled();
+  });
+
+  it('revokes an issued token and remains signed out when secure storage cannot persist it', async () => {
+    const unavailable: RefreshTokenStore = {
+      read: vi.fn().mockResolvedValue(null),
+      write: vi.fn().mockRejectedValue(new Error('keystore full')),
+      clear: vi.fn().mockResolvedValue(undefined),
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthApiService, useValue: api },
+        { provide: REFRESH_TOKEN_STORE, useValue: unavailable },
+      ],
+    });
+    session = TestBed.inject(SessionService);
+    api.login.mockReturnValue(of(bundle(1)));
+    api.logout.mockReturnValue(of(null));
+
+    await expect(session.signIn('rider@example.test', 'correct horse battery')).rejects.toThrow('keystore full');
+
+    expect(session.status()).toBe('signed-out');
+    expect(session.user()).toBeNull();
+    expect(api.logout).toHaveBeenCalledWith('refresh-1');
+    expect(unavailable.clear).toHaveBeenCalled();
+  });
+
+  it('revokes a readable token even when native removal fails during sign-out', async () => {
+    const failingClear: RefreshTokenStore = {
+      read: vi.fn().mockResolvedValue('refresh-1'),
+      write: vi.fn(),
+      clear: vi.fn().mockRejectedValue(new Error('keystore unavailable')),
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthApiService, useValue: api },
+        { provide: REFRESH_TOKEN_STORE, useValue: failingClear },
+      ],
+    });
+    session = TestBed.inject(SessionService);
+    api.logout.mockReturnValue(of(null));
+
+    await expect(session.signOut()).resolves.toBeUndefined();
+
+    expect(api.logout).toHaveBeenCalledWith('refresh-1');
+    expect(session.status()).toBe('signed-out');
+  });
+
   it('refreshes before a protected call when the access token is about to expire', async () => {
     vi.useFakeTimers();
     try {
