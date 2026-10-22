@@ -112,6 +112,11 @@ type Resolved =
       @if (favorites.loaded()) {
         <ion-note class="device-note">Favorites are saved on this device only. They aren’t synced to your account or other devices.</ion-note>
       }
+      @if (storageError()) {
+        <ion-note class="device-note storage-error" role="alert">
+          Couldn’t update favorites on this device. Please try again.
+        </ion-note>
+      }
     </ion-content>
   `,
   styles: `
@@ -139,6 +144,9 @@ type Resolved =
       margin: 16px;
       font-size: 14px;
     }
+    .storage-error {
+      color: var(--valryde-danger);
+    }
   `,
 })
 export class FavoritesPage {
@@ -148,6 +156,7 @@ export class FavoritesPage {
 
   private readonly states = signal<Partial<Record<string, Resolved>>>({});
   protected readonly resolved = computed(() => this.states());
+  protected readonly storageError = signal(false);
 
   constructor() {
     addIcons({ trashOutline });
@@ -177,7 +186,12 @@ export class FavoritesPage {
 
   async remove(routeId: string, event: Event): Promise<void> {
     event.stopPropagation();
-    await this.favorites.remove(routeId);
+    this.storageError.set(false);
+    try {
+      await this.favorites.remove(routeId);
+    } catch {
+      this.storageError.set(true);
+    }
   }
 
   open(favorite: FavoriteRoute, item: Resolved): void {

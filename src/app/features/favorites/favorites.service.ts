@@ -24,7 +24,7 @@ export const FAVORITES_STORE = new InjectionToken<Pick<typeof Preferences, 'get'
 @Injectable({ providedIn: 'root' })
 export class FavoritesService {
   private readonly store = inject(FAVORITES_STORE);
-  private writes: Promise<unknown> = Promise.resolve();
+  private operations: Promise<unknown> = Promise.resolve();
   private loading?: Promise<void>;
 
   /** Newest first. */
@@ -53,25 +53,35 @@ export class FavoritesService {
   /** Saves a route (one entry per route; saving again updates the direction and moves it to the top). */
   async save(routeId: string, directionId: string | null): Promise<'saved' | 'full'> {
     await this.load();
-    const others = this.favorites().filter((f) => f.routeId !== routeId);
-    if (others.length >= MAX_FAVORITES) return 'full';
-    this.favorites.set([{ routeId, directionId, savedAt: Date.now() }, ...others]);
-    await this.persist();
-    return 'saved';
+    return this.enqueue(async () => {
+      const others = this.favorites().filter((f) => f.routeId !== routeId);
+      if (others.length >= MAX_FAVORITES) return 'full';
+      const next = [{ routeId, directionId, savedAt: Date.now() }, ...others];
+      await this.persist(next);
+      this.favorites.set(next);
+      return 'saved';
+    });
   }
 
   async remove(routeId: string): Promise<void> {
     await this.load();
-    this.favorites.set(this.favorites().filter((f) => f.routeId !== routeId));
-    await this.persist();
+    await this.enqueue(async () => {
+      const next = this.favorites().filter((f) => f.routeId !== routeId);
+      if (next.length === this.favorites().length) return;
+      await this.persist(next);
+      this.favorites.set(next);
+    });
   }
 
-  /** Writes the current list; writes are serialized so a slower earlier write cannot overwrite a newer one. */
-  private persist(): Promise<void> {
-    const snapshot = JSON.stringify(this.favorites());
-    const write = this.writes.then(() => this.store.set({ key: KEY, value: snapshot }));
-    this.writes = write.catch(() => undefined);
-    return write;
+  /** Serializes complete mutations so failed storage writes never leave false in-memory favorite state. */
+  private enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.operations.then(operation);
+    this.operations = result.catch(() => undefined);
+    return result;
+  }
+
+  private async persist(favorites: FavoriteRoute[]): Promise<void> {
+    await this.store.set({ key: KEY, value: JSON.stringify(favorites) });
   }
 }
 
@@ -95,7 +105,7 @@ function parse(value: string | null): FavoriteRoute[] {
     result.push({
       routeId,
       directionId: typeof directionId === 'string' && directionId.length <= 64 ? directionId : null,
-      savedAt: typeof savedAt === 'number' ? savedAt : 0,
+      savedAt: typeof savedAt === 'number' && Number.isFinite(savedAt) && savedAt >= 0 ? savedAt : 0,
     });
   }
   return result.slice(0, MAX_FAVORITES);

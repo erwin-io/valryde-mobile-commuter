@@ -123,6 +123,16 @@ describe('FavoritesService', () => {
     ]);
   });
 
+  it('keeps memory truthful after a failed write and allows a later operation to recover', async () => {
+    setup();
+    store.set.mockRejectedValueOnce(new Error('storage full'));
+    await expect(favorites.save('route-1', null)).rejects.toThrow('storage full');
+    expect(favorites.isFavorite('route-1')).toBe(false);
+
+    expect(await favorites.save('route-2', 'dir-a')).toBe('saved');
+    expect(favorites.favorites().map((favorite) => favorite.routeId)).toEqual(['route-2']);
+  });
+
   it('never touches secure authentication storage', async () => {
     const secure = { read: vi.fn(), write: vi.fn(), clear: vi.fn() };
     store = fakePreferences();
@@ -142,11 +152,11 @@ describe('FavoritesPage', () => {
   const get = vi.fn();
   beforeEach(() => get.mockReset());
 
-  async function render(initial: unknown[]) {
+  async function render(initial: unknown[], store = fakePreferences(JSON.stringify(initial))) {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: FAVORITES_STORE, useValue: fakePreferences(JSON.stringify(initial)) },
+        { provide: FAVORITES_STORE, useValue: store },
         { provide: TransitRoutesService, useValue: { get } },
       ],
     });
@@ -154,7 +164,7 @@ describe('FavoritesPage', () => {
     fixture.autoDetectChanges();
     await settle(fixture);
     await settle(fixture);
-    return { fixture, page: fixture.componentInstance, text: () => fixture.nativeElement.textContent as string };
+    return { fixture, page: fixture.componentInstance, store, text: () => fixture.nativeElement.textContent as string };
   }
 
   it('shows a useful empty state and the device-only note', async () => {
@@ -223,6 +233,20 @@ describe('FavoritesPage', () => {
     await settle(fixture);
     expect(text()).toContain('17B');
   });
+
+  it('keeps a favorite visible and reports when device removal cannot be stored', async () => {
+    get.mockReturnValue(of(transitRoute()));
+    const initial = [{ routeId: 'route-1', directionId: null, savedAt: 1 }];
+    const store = fakePreferences(JSON.stringify(initial));
+    store.set.mockRejectedValueOnce(new Error('storage unavailable'));
+    const { fixture, text } = await render(initial, store);
+
+    const buttons = [...fixture.nativeElement.querySelectorAll('ion-item ion-button')] as HTMLElement[];
+    buttons.at(-1)!.click();
+    await settle(fixture);
+    expect(text()).toContain('Couldn’t update favorites on this device');
+    expect(text()).toContain('17B');
+  });
 });
 
 describe('Route sheet favorite toggle', () => {
@@ -251,6 +275,23 @@ describe('Route sheet favorite toggle', () => {
     await settle(fixture);
     expect(JSON.parse(store.data.get('valryde.favorites.v1')!)).toEqual([]);
     expect(aria(button(), 'aria-label')).toBe('Save to favorites');
+  });
+
+  it('reports a storage failure without showing a false saved state', async () => {
+    const store = fakePreferences();
+    store.set.mockRejectedValueOnce(new Error('storage unavailable'));
+    TestBed.configureTestingModule({ providers: [{ provide: FAVORITES_STORE, useValue: store }] });
+    const fixture = TestBed.createComponent(RouteDetailComponent);
+    fixture.componentRef.setInput('state', { status: 'ready', route: transitRoute() });
+    fixture.autoDetectChanges();
+    await settle(fixture);
+
+    await fixture.componentInstance.toggleFavorite();
+    await settle(fixture);
+    expect(fixture.nativeElement.textContent).toContain('Couldn’t update favorites on this device');
+    expect(aria(fixture.nativeElement.querySelectorAll('ion-buttons ion-button')[0], 'aria-label')).toBe(
+      'Save to favorites',
+    );
   });
 
   it('offers no favorite action while the route is loading or failed', async () => {

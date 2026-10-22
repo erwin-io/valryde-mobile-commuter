@@ -243,16 +243,20 @@ export class RouteDetailComponent {
   async toggleFavorite(): Promise<void> {
     const route = this.route();
     if (!route) return;
-    if (this.isFavorite()) {
-      await this.favorites.remove(route.id);
-      this.favoriteNotice.set('Removed from favorites.');
-      return;
+    try {
+      if (this.isFavorite()) {
+        await this.favorites.remove(route.id);
+        this.favoriteNotice.set('Removed from favorites.');
+        return;
+      }
+      const result = await this.favorites.save(route.id, this.direction()?.id ?? null);
+      this.favoriteNotice.set(
+        result === 'full'
+          ? `You can save up to ${MAX_FAVORITES} favorite routes. Remove one to add this route.`
+          : 'Saved to favorites on this device.',
+      );
+    } catch {
+      this.favoriteNotice.set('Couldn’t update favorites on this device. Please try again.');
     }
-    const result = await this.favorites.save(route.id, this.direction()?.id ?? null);
-    this.favoriteNotice.set(
-      result === 'full'
-        ? `You can save up to ${MAX_FAVORITES} favorite routes. Remove one to add this route.`
-        : 'Saved to favorites on this device.',
-    );
   }
 }

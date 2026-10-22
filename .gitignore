@@ -152,3 +152,7 @@ vite.config.ts.timestamp-*
 /.angular/cache
 /out-tsc
 /www
+
+# Local agent workspace and credential-bearing test configuration
+/.claude/
+/.scaffold-reference/
