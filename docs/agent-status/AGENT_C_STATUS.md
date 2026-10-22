@@ -36,6 +36,8 @@
 |---|---|---|---|---|
 | `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:54 +08:00 | No findings. |
 | `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | App + spec. |
+| PR #6 after merging `main` `50d2517`: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 18:20 +08:00 | 15 files / 141 tests (125 from main + 16 favorites); initial 641 kB; 0 runtime vulnerabilities. |
+| PR #6 combined workflow (browser, replayed real fixture) | Claude browser pane 390×844 | PASSED | 2026-10-22 18:25 +08:00 | Routes tab → select route → choose Outbound → star (inner label Save→Remove) → Favorites tab (sheet hidden after the transition, saved direction shown) → reopen → `/tabs/map?route=&direction=` with the same direction and line. |
 | PR B gates: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:10 +08:00 | 13 files / 97 tests (branch from `main`); initial 640 kB; 0 runtime vulnerabilities. |
 | PR B browser checks | Claude browser pane 390×844 | PASSED | 2026-10-22 09:00–09:10 +08:00 | Star saved route + direction ids only; Favorites tab listed the replayed real fixture with the saved direction; a real API 404 showed "Route no longer available" with remove; Ionic inner-button aria labels verified after toggling. |
 | PR A gates: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 03:20 +08:00 | 14 files / 124 tests; initial 641.5 kB (under 650 kB); 0 runtime vulnerabilities. |
@@ -68,6 +70,17 @@
 - State: OWNER_VERIFICATION_PENDING (not attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-22 18:30 +08:00 — PR #6 conflict resolution after PR #5 merge
+
+- Action / reason: Agent G conflict directive: PR #5 merged at `50d2517`; PR #6 conflicted.
+- Checklist/issue: 36 (PR #6).
+- Files/config/services affected: Merge of `origin/main` into `feat/36-local-favorite-routes` (merge commit `c1dd9f1`); conflicts resolved in `src/app/features/routes/route-detail.component.ts` (kept PR #5's offline saved-copy note and `savedAt` state plus PR #6's favorite star, notice and state), `docs/agent-status/AGENT_C_STATUS.md` and `docs/architecture/APP_ARCHITECTURE.md` (both sides kept); favorites screenshot replaced with a post-merge capture.
+- Observed result (success/failure/rollback): Success. PR #5 route-sheet visibility, map-fit and accessibility fixes and PR #6 favorites behaviour all present; `@capacitor/preferences@8.0.1` still installed and imported only by `favorites.service.ts`. The merge commit was pushed before the replacement screenshot and this entry were added (a chained command stopped early); they follow in a separate commit.
+- Validation and evidence: 141 tests, lint, typecheck, build (641 kB), runtime audit (0) and diff check passed; combined route → favorite → reopen flow verified in the browser with a replayed real fixture response.
+- Contracts / risks / dependencies: No API change. Physical Android testing remains owner-managed (VALRYDE-MOBILE-TESTING-POLICY-001).
+- Commit/PR link or SHA (if available): PR #6 https://github.com/erwin-io/valryde-mobile-commuter/pull/6 (merge `c1dd9f1` + follow-up docs commit).
+- Next action / owner gate: Agent G review of PR #6; no self-merge.
 
 ### 2026-10-22 09:15 +08:00 — Independent UI batch PR B: ID 36 device-local favorite routes
 
