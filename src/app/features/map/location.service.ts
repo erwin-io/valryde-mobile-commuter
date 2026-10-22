@@ -12,7 +12,7 @@ export const GEOLOCATION = new InjectionToken<
   Pick<typeof Geolocation, 'getCurrentPosition' | 'checkPermissions' | 'watchPosition' | 'clearWatch'>
 >('GEOLOCATION', { providedIn: 'root', factory: () => Geolocation });
 
-/** Foreground, on-device location for map context only. The position is never transmitted. */
+/** Foreground phone location. Trip discovery may send a requested fix to VALRYDE with explicit consent. */
 @Injectable({ providedIn: 'root' })
 export class LocationService {
   private readonly geolocation = inject(GEOLOCATION);

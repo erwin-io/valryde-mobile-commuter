@@ -1,0 +1,17 @@
+# ID 37 — destination and direct route discovery
+
+Contract reference: canonical `valryde-api` main `810c8a13356ddbf0e28a4faf5ad7f86ce0a30479`, merged PR #28. The historical G6 proposal still says PROPOSED; this consumer follows the merged `src/routes/place-routes.ts` and `src/routes/transit-routes.ts` schemas and the emergency takeover directive.
+
+- `GET /api/places/search?q=&limit=5` uses `REQUIRES_AUTH`; the existing interceptor performs normal access-token refresh/retry. Results are `id/name/label/lat/lng` plus displayed attribution. No direct Photon call. Explicit search submission avoids spending provider capacity on every keystroke. Query length is 2–120 after trim; blank/oversized input makes no request.
+- A commuter can search an origin, so denied/unavailable location does not prevent discovery. Current location is requested only after the displayed sharing explanation and button tap. The location is sent only when Find direct routes is requested; coordinates are never put in the navigation URL or persisted.
+- `GET /api/transit-routes/discover` remains public without a bearer token. Origin `lat/lng`, destination `destinationLat/destinationLng`, `maxWalkM=500`, `limit=5` mirror merged G6. The server owns matching, order, eligibility and distances. UI calls distances route proximity, not walking paths or ETAs.
+- Select a candidate to open `/tabs/map?route=<id>&direction=<id>`; existing route-detail loading supplies the official geometry. No geometry, transfer, fare or live vehicle response is fabricated.
+- Provider 503, 429, offline, invalid session, no-place and no-direct-route states remain distinct; Find a route stays available. Queries/points/results are memory-only and cleared after offline/sign-out/destruction. Superseded requests unsubscribe.
+
+Automated acceptance: `place-discovery.service.spec.ts` verifies endpoint/context/parameter contracts; `trip-planner.component.spec.ts` covers consent, validation, normalized display/attribution, stale request cancellation, failures/retry, map direction handoff, no direct route, denied/outside-PH location, late location and teardown. Complete suite: 19 files / 187 tests passed.
+
+Browser regression: run `npm run build`, then `node scripts/verify-destination-discovery.cjs` with Playwright available (`PLAYWRIGHT_MODULE` may specify its module path; `CHROME_PATH` may override Chrome). Uses an ephemeral loopback static server and controlled-contract responses through normal sign-in. No real provider/account or production service. Screenshots are explicitly named CONTROLLED.
+
+Remaining integration: real signed-in G6 against approved development fixtures needs owner-provided fixture credentials; provider defaults disabled and requires owner configuration. Physical Android permission/storage and native API reachability are OWNER_DEVICE_PENDING, not claimed accepted. IDs 29–35/count 36 remain Agent B contract-gated. No new checklist item is claimed Completed before Agent G acceptance.
+
+Final native verification: Capacitor sync; Gradle test/lintDebug/assembleDebug passed, with final post-correction sync/assembleDebug. APK SHA-256: ACB129555E3612255EFC5FB21FE860D1AD90241FCA6F263F865CE60040E18625. Existing Capacitor lint baseline notices remain upstream. Browser 390/320 passed; screenshots inspected. Final form-submission and retained-attribution regressions pass. Configured local API connection failed; no live G6 acceptance claimed.

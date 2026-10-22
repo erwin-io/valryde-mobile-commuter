@@ -24,7 +24,7 @@ import { StatePanelComponent } from '../../shared/state-panel.component';
 import { RouteCacheService, savedAtLabel } from './route-cache.service';
 import { RouteListItemComponent } from './route-list-item.component';
 import { TransitRoute, TransitRoutesService } from './transit-routes.service';
-import { TripPlannerGateComponent } from './trip-planner-gate.component';
+import { TripPlannerComponent } from './trip-planner.component';
 
 const PAGE_SIZE = 20;
 
@@ -52,7 +52,7 @@ type ListStatus = 'loading' | 'ready' | 'error';
     IonButton,
     RouteListItemComponent,
     StatePanelComponent,
-    TripPlannerGateComponent,
+    TripPlannerComponent,
   ],
   template: `
     <ion-header>
@@ -85,7 +85,7 @@ type ListStatus = 'loading' | 'ready' | 'error';
 
     <ion-content>
       @if (mode() === 'trip') {
-        <app-trip-planner-gate />
+        <app-trip-planner />
       } @else {
         <ion-refresher slot="fixed" (ionRefresh)="refresh($any($event.target))">
           <ion-refresher-content />
