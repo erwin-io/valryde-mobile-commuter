@@ -97,3 +97,7 @@ Access tokens remain memory-first; refresh-token secure storage requires a revie
 - Display: each favorite is resolved through `GET /api/transit-routes/{id}`; 404/400 shows "Route no longer available" with removal; network errors offer retry. Opening a favorite uses the normal `/tabs/map?route=&direction=` flow, dropping a direction the route no longer has.
 - Scope: device-local and not synchronized across accounts or devices. Available jeepney counts are not shown (Agent B gate).
 - Accessibility: Ionic buttons copy `aria-*` into their shadow button once, so state-dependent labels use one button per state rather than `[attr.aria-*]`.
+
+## Internal tracking UI adapter (rapid delivery, 2026-10-23)
+
+`TRACKING_GATEWAY` is an internal injection boundary, not a wire DTO or a proposed shared endpoint. Its production implementation returns unavailable. `VehicleTrackingStore` consumes complete normalized snapshots and server eligibility, protects direction scope, ordering, privacy, expiry and lifecycle. `VehicleMarkerRenderer` owns accessible MapLibre DOM markers and cancelable interpolation between received endpoints. `TrackingPanelComponent` exposes count, details and an accessible list. `MapPage` connects/disconnects context across route changes, hidden tabs/documents and connectivity recovery. A future Agent B wire adapter must use approved REST/Pusher/auth contracts and reconcile before emitting a fresh snapshot. No synthetic vehicle data is imported by runtime code.

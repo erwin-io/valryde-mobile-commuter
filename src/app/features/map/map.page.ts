@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
@@ -17,6 +17,9 @@ import { RouteDetailComponent } from '../routes/route-detail.component';
 import { RouteSelectionService } from '../routes/route-selection.service';
 import { LngLat, LocationService } from './location.service';
 import { TransitMapComponent } from './transit-map.component';
+import { ConnectivityService } from '../../core/connectivity.service';
+import { VehicleTrackingStore } from '../tracking/vehicle-tracking.store';
+import { TrackingPanelComponent } from '../tracking/tracking-panel.component';
 
 @Component({
   selector: 'app-map-page',
@@ -30,8 +33,9 @@ import { TransitMapComponent } from './transit-map.component';
     IonSpinner,
     TransitMapComponent,
     RouteDetailComponent,
+    TrackingPanelComponent,
   ],
-  providers: [RouteSelectionService],
+  providers: [RouteSelectionService, VehicleTrackingStore],
   template: `
     <ion-content [fullscreen]="true" [scrollY]="false">
       <app-transit-map
@@ -41,6 +45,8 @@ import { TransitMapComponent } from './transit-map.component';
         [zoom]="config.defaultZoom"
         [userLocation]="userLocation()"
         [routeLine]="selection.line()"
+        [vehicles]="tracking.vehicles()"
+        (vehicleSelected)="tracking.selectedId.set($event)"
         [bottomInset]="sheetInset"
         [active]="active()"
         [perspective]="perspective()"
@@ -52,6 +58,7 @@ import { TransitMapComponent } from './transit-map.component';
           Search jeepney routes
         </ion-button>
       </div>
+      @if (active()) { <app-tracking-panel class="tracking-panel" /> }
       <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="recenter">
         <!-- ion-fab-button copies aria-* into its shadow button only once, so each state gets its own button. -->
         @if (following()) {
@@ -109,6 +116,7 @@ import { TransitMapComponent } from './transit-map.component';
     </ion-content>
   `,
   styles: `
+    .tracking-panel { position: absolute; z-index: 2; top: calc(var(--ion-safe-area-top, 0px) + 68px); left: 16px; max-width: calc(100% - 96px); }
     /* Clear the MapLibre attribution, which wraps to two lines at 320px, so it stays visible. */
     .recenter {
       bottom: 64px;
@@ -132,6 +140,9 @@ import { TransitMapComponent } from './transit-map.component';
   `,
 })
 export class MapPage {
+  readonly tracking = inject(VehicleTrackingStore);
+  private readonly connectivity = inject(ConnectivityService);
+  private readonly documentVisible = signal(document.visibilityState !== 'hidden');
   protected readonly config = inject(APP_CONFIG);
   private readonly location = inject(LocationService);
   private readonly alerts = inject(AlertController);
@@ -156,6 +167,11 @@ export class MapPage {
   private locateRequest = 0;
 
   constructor() {
+    const visibilityChanged = () => this.documentVisible.set(document.visibilityState !== 'hidden');
+    document.addEventListener('visibilitychange', visibilityChanged);
+    inject(DestroyRef).onDestroy(() => document.removeEventListener('visibilitychange', visibilityChanged));
+    effect(() => this.tracking.connect(this.selection.direction()?.id ?? null,
+      this.active() && this.documentVisible(), this.connectivity.online()));
     addIcons({ layersOutline, locateOutline, navigate, searchOutline });
     inject(DestroyRef).onDestroy(() => this.stopFollowing());
     // ?route=<id>&direction=<id> keeps the selection deep-linkable and back-navigable.

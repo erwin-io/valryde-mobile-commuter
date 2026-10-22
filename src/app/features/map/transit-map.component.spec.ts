@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MAP_FACTORY, RouteLine, TransitMapComponent } from './transit-map.component';
+import { VEHICLE_MARKER_FACTORY } from '../tracking/vehicle-marker-renderer';
 
 class FakeMap {
   handlers: Record<string, (event?: unknown) => void> = {};
@@ -96,6 +97,25 @@ describe('TransitMapComponent', () => {
     // The user-location dot is added last so it draws above the route line.
     expect(layerIds).toEqual(['valryde-route-casing', 'valryde-route-line', 'valryde-user-location']);
     expect(fixture.nativeElement.textContent).not.toContain('Loading map');
+  });
+
+  it('composes real vehicle renderer with map load, selection, hidden-tab removal and destruction', async () => {
+    const markers: { setLngLat: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn> }[] = [];
+    const buttons: HTMLButtonElement[] = [];
+    TestBed.configureTestingModule({ providers: [{ provide: VEHICLE_MARKER_FACTORY,
+      useValue: (_map: unknown, button: HTMLButtonElement) => {
+        buttons.push(button); const marker = { setLngLat: vi.fn(), remove: vi.fn() }; markers.push(marker); return marker;
+      } }] });
+    const fixture = await render();
+    const selected = vi.fn(); fixture.componentInstance.vehicleSelected.subscribe(selected);
+    fixture.componentRef.setInput('vehicles', [{ id: 'v1', directionId: 'd1', position: [123.9, 10.3], plateNumber: 'TEST-001',
+      routeLabel: '04C', directionLabel: 'Outbound', vehicleColor: '#123456', statusLabel: 'Available', observedAtMs: 1, available: true }]);
+    await fixture.whenStable(); expect(markers).toHaveLength(0);
+    maps[0].emit('load'); await fixture.whenStable(); expect(markers).toHaveLength(1);
+    expect(markers[0].setLngLat).toHaveBeenCalledWith([123.9, 10.3]); buttons[0].click(); expect(selected).toHaveBeenCalledWith('v1');
+    fixture.componentRef.setInput('active', false); await fixture.whenStable(); expect(markers[0].remove).toHaveBeenCalledOnce();
+    fixture.componentRef.setInput('active', true); await fixture.whenStable(); expect(markers).toHaveLength(2);
+    fixture.destroy(); expect(markers[1].remove).toHaveBeenCalledOnce(); expect(maps[0].removed).toBe(true);
   });
 
   it('explains an initial style failure and recreates the map on retry', async () => {
