@@ -25,7 +25,22 @@ npm test
 npm run build        # dist/valryde-mobile-commuter/browser (Capacitor webDir)
 ```
 
-Map style, default center and zoom live in `src/environments/environment.ts`. The Android platform has not been added yet (`npx cap add android` requires a local Android SDK).
+Map style, default center and zoom live in `src/environments/environment.ts`.
+
+## Android development
+
+The Capacitor Android project is tracked in `android/`. Build the web bundle before every native sync:
+
+```powershell
+npm run build
+npx cap sync android
+Set-Location android
+.\gradlew.bat assembleDebug
+```
+
+Capacitor 8 requires Node 22+, Android Studio 2025.2.1 or newer, and an Android SDK platform at API 24 or newer. The generated project currently compiles and targets API 36 and requires Android 7.0 (API 24). See [`docs/testing/ANDROID_BUILD_READINESS.md`](./docs/testing/ANDROID_BUILD_READINESS.md) for the verified toolchain, permissions, reproducibility steps, and remaining owner gates.
+
+`com.valryde.commuter` remains a provisional application ID until the owner confirms the store identity. The bundled `/api` browser development URL is not a deployable device endpoint; an approved HTTPS or LAN API origin and backend CORS entry are still required for emulator or physical-device integration. Never put credentials in the Android project.
 
 ## Approved baseline
 

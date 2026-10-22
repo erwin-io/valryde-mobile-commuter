@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VALRYDE</string>
+    <string name="title_activity_main">VALRYDE</string>
+    <string name="package_name">com.valryde.commuter</string>
+    <string name="custom_url_scheme">com.valryde.commuter</string>
+</resources>
