@@ -4,7 +4,17 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = tseslint.config(
-  { ignores: ['dist/', 'www/', '.angular/', '.scaffold-reference/', 'node_modules/'] },
+  {
+    ignores: [
+      'dist/',
+      'www/',
+      '.angular/',
+      '.scaffold-reference/',
+      'node_modules/',
+      'android/**/build/',
+      'android/app/src/main/assets/public/',
+    ],
+  },
   {
     files: ['**/*.ts'],
     extends: [
