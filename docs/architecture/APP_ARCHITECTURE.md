@@ -81,3 +81,11 @@ Access tokens remain memory-first; refresh-token secure storage requires a revie
 - **Interceptor:** attaches `Authorization` only to requests carrying the `REQUIRES_AUTH` context flag; a 401 triggers one refresh and one retry.
 - **Launch:** `provideAppInitializer` starts `restore()` without blocking the map.
 - **Forms:** every `<form>` uses `[formGroup]`; a bare form with `(ngSubmit)` performs a native GET, which reloads the app and drops the in-memory session.
+
+## Favorite routes (checklist 36)
+
+- Store: `@capacitor/preferences` key `valryde.favorites.v1` (native key-value store; `localStorage` on the web). Deliberately separate from the secure refresh-token store.
+- Contents: only `{ routeId, directionId | null, savedAt }`, newest first, one entry per route, at most 50; malformed or duplicate entries are dropped on load; writes are serialized.
+- Display: each favorite is resolved through `GET /api/transit-routes/{id}`; 404/400 shows "Route no longer available" with removal; network errors offer retry. Opening a favorite uses the normal `/tabs/map?route=&direction=` flow, dropping a direction the route no longer has.
+- Scope: device-local and not synchronized across accounts or devices. Available jeepney counts are not shown (Agent B gate).
+- Accessibility: Ionic buttons copy `aria-*` into their shadow button once, so state-dependent labels use one button per state rather than `[attr.aria-*]`.

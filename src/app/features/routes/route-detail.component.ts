@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonButtons } from '@ionic/angular/ion-buttons';
 import { IonContent } from '@ionic/angular/ion-content';
@@ -14,9 +14,10 @@ import { IonSkeletonText } from '@ionic/angular/ion-skeleton-text';
 import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { addIcons } from 'ionicons';
-import { closeOutline, flagOutline, radioButtonOnOutline } from 'ionicons/icons';
+import { closeOutline, flagOutline, radioButtonOnOutline, star, starOutline } from 'ionicons/icons';
 import { ApiFailure, failureCopy } from '../../core/api-failure';
 import { StatePanelComponent } from '../../shared/state-panel.component';
+import { FavoritesService, MAX_FAVORITES } from '../favorites/favorites.service';
 import { RouteBadgeComponent } from './route-badge.component';
 import { RouteDirection, TransitRoute } from './transit-routes.service';
 
@@ -58,6 +59,18 @@ export type RouteDetailState =
           <ion-title>Route details</ion-title>
         }
         <ion-buttons slot="end">
+          <!-- ion-button copies aria-* into its shadow button only once, so each state gets its own button. -->
+          @if (route()) {
+            @if (isFavorite()) {
+              <ion-button aria-label="Remove from favorites" aria-pressed="true" (click)="toggleFavorite()">
+                <ion-icon slot="icon-only" name="star" aria-hidden="true" />
+              </ion-button>
+            } @else {
+              <ion-button aria-label="Save to favorites" aria-pressed="false" (click)="toggleFavorite()">
+                <ion-icon slot="icon-only" name="star-outline" aria-hidden="true" />
+              </ion-button>
+            }
+          }
           <ion-button aria-label="Close route details" (click)="closed.emit()">
             <ion-icon slot="icon-only" name="close-outline" aria-hidden="true" />
           </ion-button>
@@ -83,6 +96,9 @@ export type RouteDetailState =
         }
         @case ('ready') {
           @if (route(); as r) {
+            @if (favoriteNotice(); as notice) {
+              <ion-note class="note" role="status">{{ notice }}</ion-note>
+            }
             @if (r.description) {
               <p class="description">{{ r.description }}</p>
             }
@@ -188,6 +204,12 @@ export class RouteDetailComponent {
     const s = this.state();
     return s.status === 'ready' ? s.route : null;
   });
+  private readonly favorites = inject(FavoritesService);
+  protected readonly favoriteNotice = signal<string | null>(null);
+  protected readonly isFavorite = computed(() => {
+    const route = this.route();
+    return !!route && this.favorites.favorites().some((f) => f.routeId === route.id);
+  });
   protected readonly errorText = computed(() => {
     const s = this.state();
     return failureCopy(s.status === 'error' ? s.failure : { kind: 'unavailable' });
@@ -198,6 +220,24 @@ export class RouteDetailComponent {
   });
 
   constructor() {
-    addIcons({ closeOutline, flagOutline, radioButtonOnOutline });
+    addIcons({ closeOutline, flagOutline, radioButtonOnOutline, star, starOutline });
+    void this.favorites.load();
+  }
+
+  /** Saves the route with the direction currently shown, or removes it. Device-local only. */
+  async toggleFavorite(): Promise<void> {
+    const route = this.route();
+    if (!route) return;
+    if (this.isFavorite()) {
+      await this.favorites.remove(route.id);
+      this.favoriteNotice.set('Removed from favorites.');
+      return;
+    }
+    const result = await this.favorites.save(route.id, this.direction()?.id ?? null);
+    this.favoriteNotice.set(
+      result === 'full'
+        ? `You can save up to ${MAX_FAVORITES} favorite routes. Remove one to add this route.`
+        : 'Saved to favorites on this device.',
+    );
   }
 }

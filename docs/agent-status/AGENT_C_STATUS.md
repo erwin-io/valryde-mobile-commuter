@@ -2,19 +2,19 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-21T18:35:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-22T09:15:00+08:00
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/22-commuter-auth` (PR #4), based on `main` `0418722`; the correction commit SHA is in the PR #4 reply.
+- Branch / HEAD SHA: `feat/36-local-favorite-routes` (PR B of the independent UI batch), based on `main` `4e225fb`; independent of PR A (#5). SHAs in the PR.
 - Repository status: Checklists 23 and 24–28 merged (PR #2, PR #3). The checklist 22 commuter-auth slice is committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` and `.claude/` (local preview config, PR drafts, local-only test-account values) are intentionally not committed.
 - Execution agent: Claude (took over from Codex on 2026-10-21).
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
 - GitHub issues / PRs: PR #2 merged (`38638b5`), PR #3 merged (`0418722`). Checklist 22 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (`feat/22-commuter-auth` → `main`, open, awaiting Tech Lead review; not to be self-merged).
-- Implementation progress: READY_FOR_REVIEW (checklist 22, security correction applied); 23–28 DONE_AFTER_ACCEPTANCE.
+- Implementation progress: IN_PROGRESS (independent UI batch: PR A #5 and PR B favorites both submitted for review). 22–28 core previously accepted.
 - Tech Lead review decision (if actually issued): PR #4 CHANGES REQUIRED at `314051f`: a refresh response arriving after `signOut()` could re-authenticate and persist a refresh token. Correction submitted on the same PR; awaiting Agent G re-review. Earlier: PR #2 and PR #3 accepted and merged; 650 kB budget approved; Cebu City default center; ID 37 blocked on G6.
-- Current objective: Agent G re-review of the PR #4 session-concurrency correction.
-- Last confirmed result: Session generation invalidation and ordered storage fix the late-result defect: regression tests C-RACE-01…06 pass (C-RACE-01…04 failed before the fix); 81 tests pass; lint, typecheck and build pass.
+- Current objective: Tech Lead review of PR A (#5) and PR B (ID 36 local favorites).
+- Last confirmed result: PR B: device-local favorites (save/remove, duplicates prevented, unavailable routes, empty state) pass 97 tests on this branch; build 640 kB; runtime audit 0 vulnerabilities; real API 404 shown as "Route no longer available".
 - Next concrete action: Address Tech Lead review. Candidate next slice: 36 favorites (needs a device-local vs backend decision) or tracking once Agent B contracts are accepted.
 - Blocked by / decision owner: Physical-device verification (owner); ID 37 needs G6 (Agent A); 29–35 need Agent B contracts; mobile deep links for emailed links (G5, owner).
 - Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
@@ -27,7 +27,7 @@
 | 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE | PR #2; default center now Cebu City | Native device verification pending |
 | 24–28 | Route search/list/details/direction/line | DONE_AFTER_ACCEPTANCE | PR #3 | Real populated route data still unverified |
 | 29–35 | Live availability/movement/details/status | NOT_STARTED | Gated note only | Approved Agent B contracts |
-| 36 | Available count/favorites | NOT_STARTED | Favorites tab placeholder | Persistence decision |
+| 36 | Available count/favorites | READY_FOR_REVIEW (favorites only, PR B); count NOT_STARTED | `features/favorites/*`, star toggle in route sheet; 16 favorites tests; real 404 handling | Active jeepney count gated on Agent B; favorites are device-local by approved scope |
 | 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" gated form | Agent A G6 |
 
 ## Latest verification
@@ -36,6 +36,8 @@
 |---|---|---|---|---|
 | `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:54 +08:00 | No findings. |
 | `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | App + spec. |
+| PR B gates: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:10 +08:00 | 13 files / 97 tests (branch from `main`); initial 640 kB; 0 runtime vulnerabilities. |
+| PR B browser checks | Claude browser pane 390×844 | PASSED | 2026-10-22 09:00–09:10 +08:00 | Star saved route + direction ids only; Favorites tab listed the replayed real fixture with the saved direction; a real API 404 showed "Route no longer available" with remove; Ionic inner-button aria labels verified after toggling. |
 | `npm test` | Local Windows, jsdom | PASSED | 2026-10-21 18:30 +08:00 | 12 files, 81 tests. PR #4 correction: C-RACE-01…06 plus a late-profile-update guard; before the fix 5 of these 7 failed (C-RACE-01…04 and the guard). |
 | PR #4 correction gates: `npm run lint`, `npm run typecheck`, `npm run build`, `git diff --check` | Local Windows | PASSED | 2026-10-21 18:30 +08:00 | Initial bundle 641 kB raw / 171 kB transfer. |
 | Agent A auth contract re-check | `valryde-api` `origin/main` `827738c` vs audited `4a9a152` (source diff) | PASSED | 2026-10-21 18:30 +08:00 | Request/response shapes unchanged. Additive: rate limits now return `429 RATE_LIMITED` (D1 fixed in `34cc664`); already handled and now pinned by C-RACE-06. Live API not re-run for this correction. |
@@ -63,6 +65,17 @@
 - State: OWNER_VERIFICATION_PENDING (not attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-22 09:15 +08:00 — Independent UI batch PR B: ID 36 device-local favorite routes
+
+- Action / reason: Approved C3 scope: save/remove favorite routes on the device; active jeepney count stays gated.
+- Checklist/issue: 36 (favorites portion only).
+- Files/config/services affected: `features/favorites/favorites.service.ts`, `favorites.page.ts`, `favorites.spec.ts`; star toggle in `features/routes/route-detail.component.ts`; `app.routes.ts`; `shared/state-panel.component.ts`; removed unused `shell/pending-feature.page.ts`; `package.json`/lock (`@capacitor/preferences@8.0.1`, official, MIT); docs.
+- Observed result (success/failure/rollback): Success. Browser review found that Ionic `ion-button` copies `aria-*` attributes into its shadow button only once, so a dynamic `[attr.aria-label]`/`aria-pressed` went stale for screen readers (host said "Remove", the inner button still said "Save"). Fixed by rendering one button per state with static attributes; the same pattern exists in PR A's follow button and will be fixed on that branch. The Favorites tab also fetched each route twice on first entry (constructor + first `ionViewWillEnter`); in-flight routes are now skipped.
+- Validation and evidence: 97 tests; lint, typecheck, build, diff check, runtime audit passed; real 404 and replayed-real data verified in browser.
+- Contracts / risks / dependencies: No API change. Favorites persist only `{routeId, directionId, savedAt}` in Capacitor Preferences (`valryde.favorites.v1`), separate from the secure refresh-token store; capped at 50; not synced to accounts or other devices (no approved backend contract). Uses the existing public route-detail endpoint per favorite.
+- Commit/PR link or SHA (if available): See PR B on `feat/36-local-favorite-routes`.
+- Next action / owner gate: Tech Lead review; merge order is independent of PR A (expect a small conflict in `route-detail.component.ts`).
 
 ### 2026-10-21 18:35 +08:00 — PR #4 security correction: session concurrency
 

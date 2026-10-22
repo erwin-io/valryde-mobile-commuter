@@ -12,6 +12,7 @@ import {
   mailOutline,
   personCircleOutline,
   searchOutline,
+  starOutline,
 } from 'ionicons/icons';
 
 /** Standard loading/empty/error/offline explanation with at most one recovery action. */
@@ -76,6 +77,7 @@ export class StatePanelComponent {
       mailOutline,
       personCircleOutline,
       searchOutline,
+      starOutline,
     });
   }
 }
