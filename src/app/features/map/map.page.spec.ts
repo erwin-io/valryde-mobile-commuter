@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { APP_CONFIG } from '../../core/app-config';
@@ -177,6 +177,23 @@ describe('MapPage recenter', () => {
       const button = fixture.nativeElement.querySelector('ion-fab-button') as HTMLElement;
       expect(button.getAttribute('aria-pressed')).toBe('true');
       expect(button.getAttribute('aria-label')).toBe('Stop following my location');
+    });
+  });
+
+  describe('route sheet across tabs', () => {
+    it('hides the sheet while another tab is shown and keeps the selection for when the user returns', async () => {
+      const { fixture, page } = await setup({ granted: false, result: { kind: 'denied' } });
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      (page as unknown as { selection: { state: { set(v: unknown): void } } }).selection.state.set({ status: 'loading' });
+      page.ionViewWillLeave();
+      await fixture.whenStable();
+      expect(page.active()).toBe(false);
+      page.closeRoute(); // didDismiss from the hide must not clear ?route=
+      expect(navigate).not.toHaveBeenCalled();
+      page.ionViewWillEnter();
+      expect(page.active()).toBe(true);
+      page.closeRoute(); // a real dismiss on the Map tab clears the selection
+      expect(navigate).toHaveBeenCalledWith([], { queryParams: { route: null, direction: null }, replaceUrl: true });
     });
   });
 });

@@ -67,7 +67,7 @@ import { TransitMapComponent } from './transit-map.component';
       </ion-fab>
 
       <ion-modal
-        [isOpen]="selection.state() !== null"
+        [isOpen]="active() && selection.state() !== null"
         [breakpoints]="[0, 0.3, 0.5, 0.9]"
         [initialBreakpoint]="0.5"
         [backdropBreakpoint]="0.9"
@@ -123,6 +123,8 @@ export class MapPage {
   readonly locating = signal(false);
   /** Follow mode: the camera tracks foreground position updates until the user pans or taps again. */
   readonly following = signal(false);
+  /** The route sheet is an app-level overlay; present it only while the Map tab is the active page. */
+  readonly active = signal(true);
   private explained = false;
   private stopWatch?: () => void;
 
@@ -154,8 +156,19 @@ export class MapPage {
   }
 
   closeRoute(): void {
-    if (this.selection.state() === null) return;
+    // didDismiss also fires when the sheet is hidden for a tab change; keep the selection then.
+    if (!this.active() || this.selection.state() === null) return;
     void this.router.navigate([], { queryParams: { route: null, direction: null }, replaceUrl: true });
+  }
+
+  /** Ionic lifecycle: the Map tab is (again) the visible page. */
+  ionViewWillEnter(): void {
+    this.active.set(true);
+  }
+
+  /** Ionic lifecycle: hide the route sheet before another tab shows. */
+  ionViewWillLeave(): void {
+    this.active.set(false);
   }
 
   /** Ionic lifecycle: stop GPS updates while the Map tab is not visible. */
