@@ -34,7 +34,8 @@ export class LocationService {
         timeout: 10_000,
         maximumAge: 60_000,
       });
-      return { kind: 'located', position: [coords.longitude, coords.latitude] };
+      const position = validPosition(coords.longitude, coords.latitude);
+      return position ? { kind: 'located', position } : { kind: 'unavailable' };
     } catch {
       return (await this.isDenied()) ? { kind: 'denied' } : { kind: 'unavailable' };
     }
@@ -46,21 +47,37 @@ export class LocationService {
    */
   async watch(onPosition: (position: LngLat) => void, onError: (result: LocationResult) => void): Promise<() => void> {
     let stopped = false;
+    let cleared = false;
     let id: string | undefined;
+    const clear = () => {
+      if (id === undefined || cleared) return;
+      cleared = true;
+      void this.geolocation.clearWatch({ id }).catch(() => undefined);
+    };
     const stop = () => {
+      if (stopped) {
+        clear();
+        return;
+      }
       stopped = true;
-      if (id !== undefined) void this.geolocation.clearWatch({ id }).catch(() => undefined);
+      clear();
     };
     try {
       id = await this.geolocation.watchPosition({ enableHighAccuracy: true, timeout: 15_000, maximumAge: 5_000 }, (position, error) => {
         if (stopped) return;
-        if (position) onPosition([position.coords.longitude, position.coords.latitude]);
-        else if (error) {
+        if (position) {
+          const coordinates = validPosition(position.coords.longitude, position.coords.latitude);
+          if (coordinates) onPosition(coordinates);
+          else {
+            stop();
+            onError({ kind: 'unavailable' });
+          }
+        } else if (error) {
           stop();
           void this.isDenied().then((denied) => onError(denied ? { kind: 'denied' } : { kind: 'unavailable' }));
         }
       });
-      if (stopped) stop(); // stop() was called before the watch id arrived
+      if (stopped) clear(); // stop() was called before the watch id arrived
     } catch {
       stop();
       onError((await this.isDenied()) ? { kind: 'denied' } : { kind: 'unavailable' });
@@ -75,4 +92,15 @@ export class LocationService {
       return false;
     }
   }
+}
+
+function validPosition(longitude: number, latitude: number): LngLat | null {
+  return Number.isFinite(longitude) &&
+    Number.isFinite(latitude) &&
+    longitude >= -180 &&
+    longitude <= 180 &&
+    latitude >= -90 &&
+    latitude <= 90
+    ? [longitude, latitude]
+    : null;
 }

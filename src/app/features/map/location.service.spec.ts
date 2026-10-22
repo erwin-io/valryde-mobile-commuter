@@ -39,6 +39,14 @@ describe('LocationService', () => {
     expect(await setup({}).locate()).toEqual({ kind: 'unavailable' });
   });
 
+  it('rejects non-finite and out-of-range coordinates', async () => {
+    const service = setup({
+      getCurrentPosition: () => Promise.resolve({ coords: { latitude: 95, longitude: Number.NaN } }),
+      permission: 'granted',
+    });
+    expect(await service.locate()).toEqual({ kind: 'unavailable' });
+  });
+
   it('treats a permission check failure as not granted', async () => {
     expect(await setup({}).isGranted()).toBe(false);
     TestBed.resetTestingModule();
@@ -80,6 +88,25 @@ describe('LocationService', () => {
       stop();
       state.callback?.({ coords: { latitude: 10.4, longitude: 123.9 } });
       expect(positions).toEqual([[123.89, 10.31]]);
+      expect(state.cleared).toEqual(['watch-1']);
+    });
+
+    it('clears a watch only once when stop is repeated', async () => {
+      const { service, state } = setupWatch();
+      const stop = await service.watch(vi.fn(), vi.fn());
+      stop();
+      stop();
+      expect(state.cleared).toEqual(['watch-1']);
+    });
+
+    it('stops and reports unavailable for an invalid coordinate update', async () => {
+      const { service, state } = setupWatch();
+      const onError = vi.fn();
+      const onPosition = vi.fn();
+      await service.watch(onPosition, onError);
+      state.callback?.({ coords: { latitude: 10.31, longitude: Number.POSITIVE_INFINITY } });
+      expect(onPosition).not.toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith({ kind: 'unavailable' });
       expect(state.cleared).toEqual(['watch-1']);
     });
 

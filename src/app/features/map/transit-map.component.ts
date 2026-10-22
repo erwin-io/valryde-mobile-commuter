@@ -24,6 +24,7 @@ export type MapLike = Pick<
   | 'on'
   | 'remove'
   | 'resize'
+  | 'stop'
   | 'easeTo'
   | 'fitBounds'
   | 'addSource'
@@ -112,6 +113,10 @@ export class TransitMapComponent {
   readonly routeLine = input<RouteLine | null>(null);
   /** Pixels hidden by overlays at the bottom (e.g. a sheet), used when fitting a route. */
   readonly bottomInset = input(0);
+  /** Whether the Ionic Map tab is visible. Hidden tabs stop camera work until re-entry. */
+  readonly active = input(true);
+  /** Optional 3D-style camera only; route geometry remains the same authoritative 2D line. */
+  readonly perspective = input(false);
   /** Emits when the user pans the map by gesture (used to leave follow mode). */
   readonly userPanned = output<void>();
 
@@ -127,6 +132,7 @@ export class TransitMapComponent {
     afterNextRender(() => {
       this.init();
       const observer = new ResizeObserver(() => {
+        if (!this.active()) return;
         this.map?.resize();
         // A route chosen while this tab was hidden is fitted once the map becomes visible.
         if (this.state() === 'ready') this.fitRouteIfNeeded();
@@ -144,6 +150,25 @@ export class TransitMapComponent {
     effect(() => {
       const line = this.routeLine();
       if (this.state() === 'ready') this.renderRoute(line);
+    });
+
+    effect(() => {
+      const active = this.active();
+      if (this.state() !== 'ready' || !this.map) return;
+      if (!active) {
+        this.map.stop();
+        return;
+      }
+      this.map.resize();
+      this.fitRouteIfNeeded();
+    });
+
+    effect(() => {
+      const perspective = this.perspective();
+      const active = this.active();
+      if (!active || this.state() !== 'ready' || !this.map) return;
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      this.map.easeTo({ pitch: perspective ? 45 : 0, bearing: 0, duration: reduceMotion ? 0 : 400 });
     });
   }
 
@@ -171,6 +196,7 @@ export class TransitMapComponent {
     this.map = map;
 
     map.on('load', () => {
+      if (this.map !== map) return;
       // Route layers first so the user-location dot stays on top. Casing keeps the line legible on any route color.
       map.addSource(ROUTE_SOURCE, { type: 'geojson', data: emptyCollection() });
       map.addLayer({
@@ -204,11 +230,13 @@ export class TransitMapComponent {
 
     // Only gesture pans carry an originalEvent; programmatic easeTo/fitBounds do not.
     map.on('dragstart', (event: { originalEvent?: unknown }) => {
+      if (this.map !== map) return;
       if (event.originalEvent) this.userPanned.emit();
     });
 
     // Tile/glyph errors after load are recoverable by MapLibre; only a failed initial style is fatal.
     map.on('error', () => {
+      if (this.map !== map) return;
       if (this.state() === 'initializing') {
         this.state.set('style-error');
         this.dispose();
@@ -253,7 +281,7 @@ export class TransitMapComponent {
   /** Fits once per direction so the user's own panning is not undone by unrelated updates. */
   private fitRouteIfNeeded(): void {
     const line = this.routeLine();
-    if (!this.map || !line || this.fittedRouteId === line.id) return;
+    if (!this.active() || !this.map || !line || this.fittedRouteId === line.id) return;
     const padding = { top: 88, left: 32, right: 32, bottom: this.bottomInset() + 32 };
     const { clientWidth, clientHeight } = this.container().nativeElement;
     // A hidden or mid-transition tab has no usable size; MapLibre would silently skip the fit.
