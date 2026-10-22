@@ -88,3 +88,12 @@ Access tokens remain memory-first; refresh-token secure storage requires a revie
 - Bounds: 25 details, unfiltered first list page, 3-day expiry, 1.5 M UTF-16 chars; oldest details evicted first, then the list; quota errors clear the cache.
 - Invalidation: fresh responses overwrite; 404/400 remove a detail; expired entries are dropped on write and ignored on read; corrupt payloads are discarded; bump the key version on shape changes.
 - Use: only for network failures and timeouts (15 s), never for server errors or missing routes, and always shown with "saved <time>".
+
+## Favorite routes (checklist 36)
+
+- Store: `@capacitor/preferences` key `valryde.favorites.v1` (native key-value store; `localStorage` on the web). Deliberately separate from the secure refresh-token store.
+- Contents: only `{ routeId, directionId | null, savedAt }`, newest first, one entry per route, at most 50; malformed or duplicate entries are dropped on load; writes are serialized.
+- Reliability: a mutation becomes visible in memory only after its serialized Preferences write succeeds. A failed write leaves the prior state intact, surfaces retry-safe copy, and does not block later operations.
+- Display: each favorite is resolved through `GET /api/transit-routes/{id}`; 404/400 shows "Route no longer available" with removal; network errors offer retry. Opening a favorite uses the normal `/tabs/map?route=&direction=` flow, dropping a direction the route no longer has.
+- Scope: device-local and not synchronized across accounts or devices. Available jeepney counts are not shown (Agent B gate).
+- Accessibility: Ionic buttons copy `aria-*` into their shadow button once, so state-dependent labels use one button per state rather than `[attr.aria-*]`.

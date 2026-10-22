@@ -2,40 +2,58 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-22T03:30:00+08:00
+- Updated at (ISO 8601, Asia/Manila): 2026-10-22T10:01:36+08:00 (Codex runtime clock; the preserved Claude handoff contains later-stamped entries)
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/22-28-commuter-acceptance` (PR A of the independent UI batch), based on `main` `4e225fb` (PR #4 merge); SHAs in the PR.
-- Repository status: Checklists 23 and 24–28 merged (PR #2, PR #3). The checklist 22 commuter-auth slice is committed on the feature branch for Tech Lead review. Untracked `.scaffold-reference/` and `.claude/` (local preview config, PR drafts, local-only test-account values) are intentionally not committed.
-- Execution agent: Claude (took over from Codex on 2026-10-21).
+- Branch / HEAD SHA: `feat/36-local-favorite-routes` / correction commit `0b81c73348260636c92dab8a47c3383e9b16d018` plus this status-only reverse-handover update (PR #6); remote `main` is `50d25173619d5ac51e91f3a18204319e66c65b63`.
+- Repository status: PR #6 correction is committed and pushed. `.scaffold-reference/` and `.claude/` are preserved locally and explicitly ignored so credential-bearing test configuration cannot be committed accidentally.
+- Execution agent: Codex temporary takeover from Claude under `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001` on 2026-10-22.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PR #2 merged (`38638b5`), PR #3 merged (`0418722`). Checklist 22 PR https://github.com/erwin-io/valryde-mobile-commuter/pull/4 (`feat/22-commuter-auth` → `main`, open, awaiting Tech Lead review; not to be self-merged).
-- Implementation progress: IN_PROGRESS (independent UI batch: C1/C2 on PR A ready for review; C3 favorites on a separate branch). 22–28 core flows previously accepted.
-- Tech Lead review decision (if actually issued): PR #4 accepted and merged (`4e225fb`) after the session-concurrency correction. Independent UI batch approved: IDs 22, 23, 24–28 completion and 36 favorites only; 29–35 and 37 remain gated.
-- Current objective: Deliver AGENT_C_INDEPENDENT_UI_BATCH_READY: PR A (22–28 acceptance) and PR B (36 local favorites).
-- Last confirmed result: PR A: C1 auth states and C2 map/route completion (offline cache, follow mode, color validation, timeouts) pass 125 tests; lint, typecheck, build (641 kB) and runtime audit (0 vulnerabilities) pass. A real populated route response was captured from the local API (transient Agent E fixtures).
-- Next concrete action: Address Tech Lead review. Candidate next slice: 36 favorites (needs a device-local vs backend decision) or tracking once Agent B contracts are accepted.
-- Blocked by / decision owner: Google sign-in (owner provider/client configuration); G5 native deep links (owner design); ID 37 (Agent A G6); 29–35 (Agent B contracts); stable populated dev route data (the shared dev DB only holds transient fixtures created and removed by other agents' tests); physical-device verification (owner).
+- GitHub issues / PRs: PR #5 merged to `main` at `50d2517`; PR #6 is OPEN, MERGEABLE/CLEAN at head `e7fd599e7173b3b430feeb30edf85faf2e83726c`. Earlier PRs and their decisions remain in the activity history.
+- Implementation progress: READY_FOR_REVIEW (PR #6 favorites portion; Codex final audit complete). IDs 22–28 remain accepted and merged in PR #5.
+- Tech Lead review decision (if actually issued): PR #5 accepted and merged at `50d2517`. PR #6's prior conflict-only `CHANGES REQUIRED` action was resolved; final Tech Lead acceptance remains pending.
+- Current objective: `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` — await Tech Lead review without self-merging.
+- Last confirmed result: Pushed correction commit `0b81c73`; PR body now references the tracked post-merge screenshot and current resolved merge state. On that pushed source head, lint, typecheck, 144 tests, production build, runtime audit, and diff check passed.
+- Next concrete action: Tech Lead reviews PR #6. After acceptance/merge, resume only approved contract-backed route reliability or Android build-readiness work; do not start Agent A G6/Agent B-gated scopes.
+- Blocked by / decision owner: Physical Android-device integration testing is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 wait on Agent B's approved public tracking contract.
 - Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
+
+## Codex temporary-execution takeover — `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`
+
+- Recovery checkpoint: `AGENT_C_CODEX_TAKEOVER_READY` completed; PR checkpoint `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` completed.
+- Original Claude work recovered: PR #5 merged implementation/evidence and PR #6 favorites implementation, conflict resolution, tests, screenshot, and status history are present and retained.
+- Open PR state: PR #6 is open, mergeable, and clean on GitHub at the same SHA as local HEAD; GitGuardian is passing.
+- Uncommitted work preserved: `.claude/` and `.scaffold-reference/` remain untracked and untouched. The local-only values under `.claude/` must never be committed or printed.
+- Canonical governance pending: valryde-api PR #16 for `VALRYDE-MOBILE-TESTING-POLICY-001` is open/mergeable, not merged; no canonical synchronization is claimed.
+- Tests executed by Codex after takeover: Lint, strict app/spec typecheck, 15 test files / 144 tests, production build, runtime dependency audit, full dependency audit, and diff check. Android environment inventory was performed; no physical-device test was claimed.
+- Exact implementation package delivered: PR #6 final audit, Preferences failure correction, current-head gates, screenshot/merge-note correction, and reverse-handover status. Next work remains contingent on Tech Lead review and approved contracts.
 
 ## Checklist coverage
 
 | Checklist ID | Feature / slice | Progress | Evidence (files/tests/PR) | Blocker / next action |
 |---:|---|---|---|---|
-| 22 | Commuter signup/login/profile | IN_PROGRESS (core accepted in PR #4; completion states on PR A) | PR A: damaged-link validation, resend-verification page, disabled-account copy, server-ended-session notice | Google sign-in gated on owner provider config; G5 deep links; device verification |
-| 23 | Landing/map/current location | READY_FOR_REVIEW (completion on PR A) | Follow mode, permission revoked during follow, fit-to-route robustness | Device location verification pending |
-| 24–28 | Route search/list/details/direction/line | READY_FOR_REVIEW (completion on PR A) | Offline route cache (bounded, expiring, invalidated), 15 s timeouts, Admin color validation, sheet hidden across tabs | Stable populated dev data |
+| 22 | Commuter signup/login/profile | IN_PROGRESS (core and completion states merged in PR #4/#5) | Damaged-link validation, resend page, disabled-account copy, server-ended notice | Google sign-in gated on owner provider config; G5 deep links; device verification |
+| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE (PR #5 merged `50d2517`) | Follow mode, fit-to-route robustness, sheet across tabs | Device location verification (owner, VALRYDE-MOBILE-TESTING-POLICY-001) |
+| 24–28 | Route search/list/details/direction/line | DONE_AFTER_ACCEPTANCE (PR #5 merged `50d2517`) | Offline route cache, timeouts, color validation | Stable populated dev data |
 | 29–35 | Live availability/movement/details/status | NOT_STARTED | Gated note only | Approved Agent B contracts |
-| 36 | Available count/favorites | IN_PROGRESS (favorites only, PR B) | Device-local favorites on `feat/36-local-favorite-routes` | Active jeepney count gated on Agent B |
+| 36 | Available count/favorites | READY_FOR_REVIEW (favorites only, PR B); count NOT_STARTED | `features/favorites/*`, star toggle in route sheet; 16 favorites tests; real 404 handling | Active jeepney count gated on Agent B; favorites are device-local by approved scope |
 | 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" gated form | Agent A G6 |
 
 ## Latest verification
 
 | Command / check | Environment | Result | Date/time | Evidence / notes |
 |---|---|---|---|---|
+| Codex PR #6 correction: `npm run lint`, `npm run typecheck`, `npm test` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:59 +08:00 | 15 files / 144 tests, including failed save/remove truthfulness, user-visible storage failure, and queue recovery. A mistargeted npm `--include` flag emitted a warning and Angular still ran the complete suite. |
+| Codex PR #6 correction: `npm run build`, `npm audit --omit=dev`, `git diff --check` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:57 +08:00 | Initial 640.99 kB raw / 170.28 kB transfer; 0 runtime vulnerabilities; no whitespace errors. |
+| Full `npm audit --json` | Local lockfile | 3 high, 3 moderate, 1 low (dev tooling only) | 2026-10-22 09:57 +08:00 | Angular CLI/MCP SDK, Vite launch-editor, and Capacitor CLI/xcode/uuid chains; available npm fixes change the major/tooling line or downgrade Capacitor CLI. Runtime audit is clean. |
+| Android build readiness inventory | Local Windows | BLOCKED | 2026-10-22 09:57 +08:00 | Java and `adb` found; no `android/` project, `sdkmanager`, `ANDROID_HOME`, or `ANDROID_SDK_ROOT`. Physical-device testing is owner-controlled. |
 | `npm run lint` | Local Windows, Node 22.17.1 | PASSED | 2026-10-21 10:54 +08:00 | No findings. |
 | `npm run typecheck` | Local Windows | PASSED | 2026-10-21 10:54 +08:00 | App + spec. |
+| PR #6 after merging `main` `50d2517`: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 18:20 +08:00 | 15 files / 141 tests (125 from main + 16 favorites); initial 641 kB; 0 runtime vulnerabilities. |
+| PR #6 combined workflow (browser, replayed real fixture) | Claude browser pane 390×844 | PASSED | 2026-10-22 18:25 +08:00 | Routes tab → select route → choose Outbound → star (inner label Save→Remove) → Favorites tab (sheet hidden after the transition, saved direction shown) → reopen → `/tabs/map?route=&direction=` with the same direction and line. |
+| PR B gates: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:10 +08:00 | 13 files / 97 tests (branch from `main`); initial 640 kB; 0 runtime vulnerabilities. |
+| PR B browser checks | Claude browser pane 390×844 | PASSED | 2026-10-22 09:00–09:10 +08:00 | Star saved route + direction ids only; Favorites tab listed the replayed real fixture with the saved direction; a real API 404 showed "Route no longer available" with remove; Ionic inner-button aria labels verified after toggling. |
 | PR A gates: lint, typecheck, `npm test`, build, `git diff --check`, `npm audit --omit=dev` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 03:20 +08:00 | 14 files / 124 tests; initial 641.5 kB (under 650 kB); 0 runtime vulnerabilities. |
 | PR A browser checks | Claude browser pane 390×844 | PASSED | 2026-10-22 03:00–03:25 +08:00 | Mocked/replayed list → sheet → line; simulated offline (fetch rejected) showed saved route list and detail with timestamps; offline search errored instead of guessing. Window minimization repeatedly suspended rendering, limiting screenshots. |
 | Real populated route data | Local API, transient Agent E fixtures | PASSED (read-only capture) | 2026-10-22 03:13 +08:00 | `GET /api/transit-routes` total 2 and detail 200; colors valid `#RRGGBB`; geometry drawable; matches client DTOs. Fixtures appear and disappear within seconds, so no stable populated flow was possible. |
@@ -66,6 +84,61 @@
 - State: OWNER_VERIFICATION_PENDING (not attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-22 10:01 +08:00 — PR #6 Codex final-review checkpoint
+
+- Action / reason: Pushed the scoped persistence correction to the existing PR #6 branch, replaced outdated PR merge/screenshot notes with current evidence, and reran every applicable automated gate on the pushed source head.
+- Checklist/issue: ID 36 favorites portion; PR #6; takeover directive `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`.
+- Files/config/services affected: Commit `0b81c73348260636c92dab8a47c3383e9b16d018`; PR #6 description; this status-only reverse handover. No backend, Traccar, database, production, or physical-device change.
+- Observed result (success/failure/rollback): Success. PR #6 remains open and unmerged. The stale screenshot path and obsolete expected-conflict note are gone. The PR describes the merged-main state, tracked screenshot, storage-failure behavior, Android gate, and current tests.
+- Validation and evidence: `npm run lint`, `npm run typecheck`, `npm test` (15 files / 144 tests), `npm run build` (640.99 kB initial), `npm audit --omit=dev` (0), and `git diff --check` all passed on pushed source commit `0b81c73`. GitGuardian passed. Full audit findings remain dev-tooling-only and are recorded above.
+- Contracts / risks / dependencies: No shared contract change. Android project/SDK setup and physical-device evidence remain owner-gated. Mobile-policy sync remains deferred until valryde-api PR #16 merges. IDs 29–35/available count and ID 37 remain Agent B/Agent A G6 gated.
+- Commit/PR link or SHA (if available): PR #6 https://github.com/erwin-io/valryde-mobile-commuter/pull/6; correction `0b81c73348260636c92dab8a47c3383e9b16d018`.
+- Next action / owner gate: Tech Lead reviews PR #6 and issues ACCEPTED, CHANGES REQUIRED, or OPERATOR-GATED. Codex must not self-merge.
+
+### 2026-10-22 09:58 +08:00 — Codex PR #6 reliability audit and local correction
+
+- Action / reason: Reviewed the reconciled PR #6 diff against merged `main` and tightened the final device-local persistence path before Tech Lead acceptance.
+- Checklist/issue: ID 36 favorites portion; PR #6.
+- Files/config/services affected: `favorites.service.ts`, `favorites.page.ts`, `favorites.spec.ts`, `route-detail.component.ts`, architecture/status docs, `.gitignore`. No backend, API, schema, auth-token storage, tracking, or production environment changes.
+- Observed result (success/failure/rollback): Preferences mutations are now serialized as complete store-then-publish operations; failed writes keep prior UI state, show retry-safe copy, and do not poison the queue. Malformed non-finite/negative `savedAt` values normalize safely. Local agent/test directories remain on disk but are ignored to prevent accidental credential/config commits.
+- Validation and evidence: Lint and strict typecheck passed; 144/144 tests passed; production build passed at 640.99 kB initial; runtime audit found 0 vulnerabilities; diff check passed. Full audit still reports 7 dev-tooling advisories. The post-merge Favorites screenshot was visually inspected and matches the actual tracked file.
+- Contracts / risks / dependencies: No shared contract change. Native Android build remains unavailable because the platform/project and complete SDK environment are absent; physical-device testing remains owner-only.
+- Commit/PR link or SHA (if available): Local changes pending commit/push to PR #6.
+- Next action / owner gate: Commit/push, correct PR body references, rerun gates on the pushed head, and await Tech Lead review without self-merging.
+
+### 2026-10-22 09:51 +08:00 — Codex temporary takeover recovery
+
+- Action / reason: Temporarily assumed Agent C execution under the owner/Tech Lead directive after Claude reached its usage limit; recovered rather than restarted the existing work.
+- Checklist/issue: ID 36 favorites portion; PR #6 finalization; takeover directive `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`.
+- Files/config/services affected: This persistent status only. Source, dependencies, evidence, untracked local files, backend, Traccar, and production environments were not changed during recovery.
+- Observed result (success/failure/rollback): Local branch and GitHub PR #6 both point to `e7fd599e7173b3b430feeb30edf85faf2e83726c`; remote main is merged PR #5 at `50d25173619d5ac51e91f3a18204319e66c65b63`; PR #6 is OPEN, CLEAN and MERGEABLE. `.claude/` and `.scaffold-reference/` are preserved. valryde-api PR #16 is still open, so mobile-policy synchronization is deferred.
+- Validation and evidence: Git status/history, remote refs, PR #5/#6 metadata/checks, PR #16 metadata, branch diff, and untracked inventory inspected. No Codex test/build claim yet.
+- Contracts / risks / dependencies: No contract change. Physical Android testing remains owner-only; Agent A G6 and Agent B public contracts remain required for gated scopes.
+- Commit/PR link or SHA (if available): PR #6 https://github.com/erwin-io/valryde-mobile-commuter/pull/6; recovery began from head `e7fd599e7173b3b430feeb30edf85faf2e83726c`.
+- Next action / owner gate: Audit PR #6 code/evidence/body, rerun final-head gates, update the PR/status, and do not self-merge.
+
+### 2026-10-22 18:30 +08:00 — PR #6 conflict resolution after PR #5 merge
+
+- Action / reason: Agent G conflict directive: PR #5 merged at `50d2517`; PR #6 conflicted.
+- Checklist/issue: 36 (PR #6).
+- Files/config/services affected: Merge of `origin/main` into `feat/36-local-favorite-routes` (merge commit `c1dd9f1`); conflicts resolved in `src/app/features/routes/route-detail.component.ts` (kept PR #5's offline saved-copy note and `savedAt` state plus PR #6's favorite star, notice and state), `docs/agent-status/AGENT_C_STATUS.md` and `docs/architecture/APP_ARCHITECTURE.md` (both sides kept); favorites screenshot replaced with a post-merge capture.
+- Observed result (success/failure/rollback): Success. PR #5 route-sheet visibility, map-fit and accessibility fixes and PR #6 favorites behaviour all present; `@capacitor/preferences@8.0.1` still installed and imported only by `favorites.service.ts`. The merge commit was pushed before the replacement screenshot and this entry were added (a chained command stopped early); they follow in a separate commit.
+- Validation and evidence: 141 tests, lint, typecheck, build (641 kB), runtime audit (0) and diff check passed; combined route → favorite → reopen flow verified in the browser with a replayed real fixture response.
+- Contracts / risks / dependencies: No API change. Physical Android testing remains owner-managed (VALRYDE-MOBILE-TESTING-POLICY-001).
+- Commit/PR link or SHA (if available): PR #6 https://github.com/erwin-io/valryde-mobile-commuter/pull/6 (merge `c1dd9f1` + follow-up docs commit).
+- Next action / owner gate: Agent G review of PR #6; no self-merge.
+
+### 2026-10-22 09:15 +08:00 — Independent UI batch PR B: ID 36 device-local favorite routes
+
+- Action / reason: Approved C3 scope: save/remove favorite routes on the device; active jeepney count stays gated.
+- Checklist/issue: 36 (favorites portion only).
+- Files/config/services affected: `features/favorites/favorites.service.ts`, `favorites.page.ts`, `favorites.spec.ts`; star toggle in `features/routes/route-detail.component.ts`; `app.routes.ts`; `shared/state-panel.component.ts`; removed unused `shell/pending-feature.page.ts`; `package.json`/lock (`@capacitor/preferences@8.0.1`, official, MIT); docs.
+- Observed result (success/failure/rollback): Success. Browser review found that Ionic `ion-button` copies `aria-*` attributes into its shadow button only once, so a dynamic `[attr.aria-label]`/`aria-pressed` went stale for screen readers (host said "Remove", the inner button still said "Save"). Fixed by rendering one button per state with static attributes; the same pattern exists in PR A's follow button and will be fixed on that branch. The Favorites tab also fetched each route twice on first entry (constructor + first `ionViewWillEnter`); in-flight routes are now skipped.
+- Validation and evidence: 97 tests; lint, typecheck, build, diff check, runtime audit passed; real 404 and replayed-real data verified in browser.
+- Contracts / risks / dependencies: No API change. Favorites persist only `{routeId, directionId, savedAt}` in Capacitor Preferences (`valryde.favorites.v1`), separate from the secure refresh-token store; capped at 50; not synced to accounts or other devices (no approved backend contract). Uses the existing public route-detail endpoint per favorite.
+- Commit/PR link or SHA (if available): See PR B on `feat/36-local-favorite-routes`.
+- Next action / owner gate: Tech Lead review; merge order is independent of PR A (expect a small conflict in `route-detail.component.ts`).
 
 ### 2026-10-22 03:30 +08:00 — Independent UI batch PR A: C1 auth completion and C2 map/route completion
 

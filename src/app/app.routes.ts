@@ -16,11 +16,7 @@ export const routes: Routes = [
       },
       {
         path: 'favorites',
-        loadComponent: () => import('./shell/pending-feature.page').then((m) => m.PendingFeaturePage),
-        data: {
-          title: 'Favorites',
-          body: 'Saved routes will appear here once favorite storage is approved.',
-        },
+        loadComponent: () => import('./features/favorites/favorites.page').then((m) => m.FavoritesPage),
       },
       {
         path: 'account',
