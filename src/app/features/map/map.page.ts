@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
@@ -115,6 +115,7 @@ export class MapPage {
   private readonly toasts = inject(ToastController);
   private readonly map = viewChild<TransitMapComponent>('map');
   private readonly router = inject(Router);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   protected readonly selection = inject(RouteSelectionService);
   /** Map area hidden by the route sheet at its initial 0.5 breakpoint. */
   protected readonly sheetInset = Math.round(window.innerHeight * 0.5);
@@ -169,6 +170,8 @@ export class MapPage {
   /** Ionic lifecycle: hide the route sheet before another tab shows. */
   ionViewWillLeave(): void {
     this.active.set(false);
+    // Ionic detaches change detection from pages that leave, so apply [isOpen]=false now.
+    this.changeDetector.detectChanges();
   }
 
   /** Ionic lifecycle: stop GPS updates while the Map tab is not visible. */

@@ -225,4 +225,14 @@ describe('TransitMapComponent', () => {
     expect(maps[0].fitBounds).toHaveBeenCalledOnce();
     expect(maps[0].fitBounds.mock.calls[0][1].duration).toBe(0);
   });
+
+  it('re-measures the map before fitting, so a tab that just became visible fits correctly', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    maps[0].resize.mockClear();
+    fixture.componentRef.setInput('routeLine', line);
+    await fixture.whenStable();
+    expect(maps[0].resize).toHaveBeenCalled();
+    expect(maps[0].resize.mock.invocationCallOrder[0]).toBeLessThan(maps[0].fitBounds.mock.invocationCallOrder[0]);
+  });
 });

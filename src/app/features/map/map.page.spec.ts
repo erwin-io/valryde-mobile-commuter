@@ -185,7 +185,16 @@ describe('MapPage recenter', () => {
       const { fixture, page } = await setup({ granted: false, result: { kind: 'denied' } });
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       (page as unknown as { selection: { state: { set(v: unknown): void } } }).selection.state.set({ status: 'loading' });
+      await fixture.whenStable();
+      const modal = fixture.nativeElement.querySelector('ion-modal') as HTMLElement & { isOpen: boolean };
+      expect(modal.isOpen).toBe(true);
+      // Ionic detaches change detection from a page as it leaves; the sheet must still close.
+      fixture.autoDetectChanges(false);
+      fixture.changeDetectorRef.detach();
       page.ionViewWillLeave();
+      expect(modal.isOpen).toBe(false);
+      fixture.changeDetectorRef.reattach();
+      fixture.autoDetectChanges();
       await fixture.whenStable();
       expect(page.active()).toBe(false);
       page.closeRoute(); // didDismiss from the hide must not clear ?route=

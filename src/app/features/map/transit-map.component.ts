@@ -259,6 +259,9 @@ export class TransitMapComponent {
     // A hidden or mid-transition tab has no usable size; MapLibre would silently skip the fit.
     if (clientHeight <= padding.top + padding.bottom || clientWidth <= padding.left + padding.right) return;
     this.fittedRouteId = line.id;
+    // The route can arrive before the ResizeObserver runs for a tab that just became visible; MapLibre
+    // still has the hidden (0×0) canvas size then, and fitBounds would silently do nothing.
+    this.map.resize();
     // Jump, don't animate: MapLibre's resize() (fired by Ionic tab transitions) stops camera animations,
     // and hidden or backgrounded WebViews pause animation frames, both of which left the fit abandoned.
     this.map.fitBounds(lineBounds(line.coordinates), { padding, maxZoom: 16, duration: 0 });
