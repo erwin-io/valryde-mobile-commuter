@@ -282,6 +282,7 @@ describe('Account pages', () => {
       const { fixture, text } = render(AccountPage);
       await settle(fixture);
       expect(text()).toContain('Can’t restore your session');
+      expect(text()).toContain('Check your connection or unlock your device');
     });
   });
 

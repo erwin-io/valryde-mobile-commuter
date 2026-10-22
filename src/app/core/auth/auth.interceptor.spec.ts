@@ -1,4 +1,10 @@
-import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpContext,
+  HttpErrorResponse,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
@@ -10,7 +16,7 @@ describe('authInterceptor', () => {
   let http: HttpClient;
   let backend: HttpTestingController;
   let token: string;
-  const session = { validAccessToken: vi.fn(), refresh: vi.fn() };
+  const session = { validAccessToken: vi.fn(), refresh: vi.fn(), clearLocal: vi.fn() };
   const authed = { context: new HttpContext().set(REQUIRES_AUTH, true) };
   const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -18,6 +24,7 @@ describe('authInterceptor', () => {
     token = 'access-1';
     session.validAccessToken.mockReset().mockImplementation(async () => token);
     session.refresh.mockReset().mockImplementation(async () => void (token = 'access-2'));
+    session.clearLocal.mockReset().mockResolvedValue(undefined);
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
@@ -68,6 +75,18 @@ describe('authInterceptor', () => {
     backend.expectOne('/api/auth/me').flush({}, { status: 401, statusText: 'x' });
     await expect(result).rejects.toMatchObject({ status: 401 });
     expect(session.refresh).toHaveBeenCalledOnce();
+    expect(session.clearLocal).toHaveBeenCalledWith(true);
+  });
+
+  it('does not attempt another refresh when token acquisition already rejected as revoked', async () => {
+    session.validAccessToken.mockRejectedValue(
+      new HttpErrorResponse({ status: 401, error: { error: { code: 'SESSION_REVOKED' } } }),
+    );
+    const result = firstValueFrom(http.get('/api/auth/me', authed));
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    expect(session.refresh).not.toHaveBeenCalled();
+    backend.expectNone('/api/auth/me');
   });
 
   it('does not refresh for non-401 errors', async () => {

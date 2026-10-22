@@ -57,7 +57,7 @@ import { displayNameValidators, trimmed } from './auth-form';
           <app-state-panel
             icon="cloud-offline-outline"
             title="Can’t restore your session"
-            body="VALRYDE couldn’t be reached. You can keep using the map and routes while offline."
+            body="Check your connection or unlock your device, then try again. You can still use the map and routes."
             actionLabel="Try again"
             (action)="session.restore()"
           />

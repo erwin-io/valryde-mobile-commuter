@@ -11,27 +11,23 @@ export interface RefreshTokenStore {
 
 const KEY = 'valryde.refreshToken';
 
-type SecureStorage = Pick<typeof SecureStoragePlugin, 'get' | 'set' | 'remove'>;
+type SecureStorage = Pick<typeof SecureStoragePlugin, 'get' | 'set' | 'remove' | 'keys'>;
 
 /** iOS Keychain / Android Keystore via capacitor-secure-storage-plugin. */
 export function secureRefreshTokenStore(storage: SecureStorage): RefreshTokenStore {
   return {
     async read() {
-      try {
-        return (await storage.get({ key: KEY })).value || null;
-      } catch {
-        return null; // The plugin rejects when the key does not exist.
-      }
+      // `get` rejects both when the key is absent and when the native store is unavailable.
+      // Checking the plugin-owned key list first lets real Keychain/Keystore failures reach the
+      // session UI instead of being misreported as a signed-out user.
+      if (!(await storage.keys()).value.includes(KEY)) return null;
+      return (await storage.get({ key: KEY })).value || null;
     },
     async write(token) {
       await storage.set({ key: KEY, value: token });
     },
     async clear() {
-      try {
-        await storage.remove({ key: KEY });
-      } catch {
-        // Already absent.
-      }
+      if ((await storage.keys()).value.includes(KEY)) await storage.remove({ key: KEY });
     },
   };
 }
