@@ -58,3 +58,11 @@ Request foreground location only after contextual explanation or explicit recent
 - **Route sheet** is presented only while the Map tab is the active Ionic page; a hide for a tab change keeps the selection.
 - **Admin color**: `#RRGGBB` only; anything else renders in neutral `#5E6B65` and is never passed to CSS or MapLibre.
 - **Offline route data**: see `RouteCacheService`: unfiltered first list page and up to 25 route details, 3-day expiry, 1.5 M-char cap with oldest-first eviction, removal on 404/400, used only when the network fails and always labelled with its save time. No offline search or routing.
+
+## Camera and lifecycle hardening (checklist 23)
+
+- The default remains north-up 2D. An explicit, accessible control may opt the camera into a bounded 45° pitch and always resets bearing to north; it changes presentation only, never route geometry or location/tracking semantics.
+- Leaving the Ionic Map tab stops camera transitions and GPS following. Re-entry resizes the existing MapLibre instance and completes any route fit deferred while the tab had no usable size.
+- Callbacks from a disposed/retried MapLibre instance are ignored, so a late style-load or gesture event cannot mutate the replacement map.
+- Foreground phone coordinates are accepted only when finite and within WGS84 bounds. Invalid watch observations stop the watch and surface the existing unavailable state; watch cleanup is idempotent.
+- **Offline base-map caching remains blocked, not implemented.** The current MapLibre web integration exposes no bounded, provider-neutral tile cache, and the configured style/tile provider's distribution and caching terms have not been approved for this app. Route metadata caching is separate and does not imply offline tiles.

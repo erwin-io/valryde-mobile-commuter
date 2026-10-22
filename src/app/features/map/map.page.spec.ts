@@ -17,6 +17,8 @@ class FakeTransitMap {
   readonly userLocation = input<[number, number] | null>(null);
   readonly routeLine = input<unknown>(null);
   readonly bottomInset = input(0);
+  readonly active = input(true);
+  readonly perspective = input(false);
   readonly userPanned = output<void>();
   focus = vi.fn();
 }
@@ -160,6 +162,24 @@ describe('MapPage recenter', () => {
       expect(watcher.stop).toHaveBeenCalled();
     });
 
+    it('does not start a delayed watch after the Map tab has left', async () => {
+      let finishLocate: ((result: LocationResult) => void) | undefined;
+      const pending = new Promise<LocationResult>((resolve) => (finishLocate = resolve));
+      const context = await setup(located);
+      const locationBeforeRequest = context.page.userLocation();
+      const focusCallsBeforeRequest = context.map().focus.mock.calls.length;
+      context.location.locate.mockReturnValueOnce(pending);
+      const recentering = context.page.recenter();
+      context.page.ionViewWillLeave();
+      context.page.ionViewDidLeave();
+      finishLocate?.({ kind: 'located', position: [123.9, 10.32] });
+      await recentering;
+      expect(context.location.watch).not.toHaveBeenCalled();
+      expect(context.page.following()).toBe(false);
+      expect(context.page.userLocation()).toEqual(locationBeforeRequest);
+      expect(context.map().focus).toHaveBeenCalledTimes(focusCallsBeforeRequest);
+    });
+
     it('permission revoked during follow stops following and explains the map still works', async () => {
       const { page, watcher, toasts } = await setup(located);
       await page.recenter();
@@ -186,6 +206,23 @@ describe('MapPage recenter', () => {
       expect(aria('aria-pressed')).toBe('false');
       expect(aria('aria-label')).toBe('Show and follow my location');
     });
+  });
+
+  it('exposes an accessible optional map-pitch control', async () => {
+    const { fixture, page, map } = await setup({ granted: false, result: { kind: 'denied' } });
+    const buttons = () => Array.from(fixture.nativeElement.querySelectorAll('ion-fab-button')) as HTMLElement[];
+    const pitchAria = (name: string) => {
+      const host = buttons().at(-1);
+      return host?.shadowRoot?.querySelector('button')?.getAttribute(name) ?? host?.getAttribute(name);
+    };
+    expect(map().perspective()).toBe(false);
+    expect(pitchAria('aria-label')).toBe('Tilt map');
+    expect(pitchAria('aria-pressed')).toBe('false');
+    page.togglePerspective();
+    await fixture.whenStable();
+    expect(map().perspective()).toBe(true);
+    expect(pitchAria('aria-label')).toBe('Use 2D map');
+    expect(pitchAria('aria-pressed')).toBe('true');
   });
 
   describe('route sheet across tabs', () => {

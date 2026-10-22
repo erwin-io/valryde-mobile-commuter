@@ -11,7 +11,7 @@ import { IonModal } from '@ionic/angular/ion-modal';
 import { IonSpinner } from '@ionic/angular/ion-spinner';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
-import { locateOutline, navigate, searchOutline } from 'ionicons/icons';
+import { layersOutline, locateOutline, navigate, searchOutline } from 'ionicons/icons';
 import { APP_CONFIG } from '../../core/app-config';
 import { RouteDetailComponent } from '../routes/route-detail.component';
 import { RouteSelectionService } from '../routes/route-selection.service';
@@ -42,6 +42,8 @@ import { TransitMapComponent } from './transit-map.component';
         [userLocation]="userLocation()"
         [routeLine]="selection.line()"
         [bottomInset]="sheetInset"
+        [active]="active()"
+        [perspective]="perspective()"
         (userPanned)="stopFollowing()"
       />
       <div class="map-search">
@@ -72,6 +74,17 @@ import { TransitMapComponent } from './transit-map.component';
           </ion-fab-button>
         }
       </ion-fab>
+      <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="perspective">
+        @if (perspective()) {
+          <ion-fab-button color="primary" aria-label="Use 2D map" aria-pressed="true" (click)="togglePerspective()">
+            <ion-icon name="layers-outline" aria-hidden="true" />
+          </ion-fab-button>
+        } @else {
+          <ion-fab-button color="light" aria-label="Tilt map" aria-pressed="false" (click)="togglePerspective()">
+            <ion-icon name="layers-outline" aria-hidden="true" />
+          </ion-fab-button>
+        }
+      </ion-fab>
 
       <ion-modal
         [isOpen]="active() && selection.state() !== null"
@@ -99,6 +112,9 @@ import { TransitMapComponent } from './transit-map.component';
     /* Clear the MapLibre attribution, which wraps to two lines at 320px, so it stays visible. */
     .recenter {
       bottom: 64px;
+    }
+    .perspective {
+      bottom: 124px;
     }
     .map-search {
       position: absolute;
@@ -131,13 +147,16 @@ export class MapPage {
   readonly locating = signal(false);
   /** Follow mode: the camera tracks foreground position updates until the user pans or taps again. */
   readonly following = signal(false);
+  /** Optional camera pitch only; it does not change route or vehicle data. */
+  readonly perspective = signal(false);
   /** The route sheet is an app-level overlay; present it only while the Map tab is the active page. */
   readonly active = signal(true);
   private explained = false;
   private stopWatch?: () => void;
+  private locateRequest = 0;
 
   constructor() {
-    addIcons({ locateOutline, navigate, searchOutline });
+    addIcons({ layersOutline, locateOutline, navigate, searchOutline });
     inject(DestroyRef).onDestroy(() => this.stopFollowing());
     // ?route=<id>&direction=<id> keeps the selection deep-linkable and back-navigable.
     inject(ActivatedRoute)
@@ -153,6 +172,10 @@ export class MapPage {
 
   openSearch(): void {
     void this.router.navigate(['/tabs/routes']);
+  }
+
+  togglePerspective(): void {
+    this.perspective.update((enabled) => !enabled);
   }
 
   chooseDirection(directionId: string): void {
@@ -177,6 +200,8 @@ export class MapPage {
   /** Ionic lifecycle: hide the route sheet before another tab shows. */
   ionViewWillLeave(): void {
     this.active.set(false);
+    this.locateRequest++;
+    this.locating.set(false);
     // Ionic detaches change detection from pages that leave, so apply [isOpen]=false now.
     this.changeDetector.detectChanges();
   }
@@ -202,7 +227,7 @@ export class MapPage {
       this.explained = true;
       if (!(await this.explainLocation())) return;
     }
-    if (await this.showMyLocation()) await this.startFollowing();
+    if ((await this.showMyLocation()) && this.active()) await this.startFollowing();
   }
 
   private async locateIfGranted(): Promise<void> {
@@ -232,9 +257,11 @@ export class MapPage {
 
   /** Locates once and centers the map. Returns true when a position was found. */
   private async showMyLocation(): Promise<boolean> {
+    const request = ++this.locateRequest;
     this.locating.set(true);
     try {
       const result = await this.location.locate();
+      if (request !== this.locateRequest || !this.active()) return false;
       switch (result.kind) {
         case 'located':
           this.userLocation.set(result.position);
@@ -250,7 +277,7 @@ export class MapPage {
           break;
       }
     } finally {
-      this.locating.set(false);
+      if (request === this.locateRequest) this.locating.set(false);
     }
     return false;
   }

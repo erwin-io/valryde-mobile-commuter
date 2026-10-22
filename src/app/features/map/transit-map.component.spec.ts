@@ -12,6 +12,7 @@ class FakeMap {
   addSource = vi.fn();
   addLayer = vi.fn();
   resize = vi.fn();
+  stop = vi.fn();
   on(event: string, handler: (event?: unknown) => void) {
     this.handlers[event] = handler;
     return this;
@@ -108,6 +109,19 @@ describe('TransitMapComponent', () => {
 
     fixture.componentInstance.retry();
     expect(maps).toHaveLength(2);
+    expect(fixture.componentInstance.state()).toBe('initializing');
+  });
+
+  it('ignores late events from a map that was replaced by retry', async () => {
+    const fixture = await render();
+    maps[0].emit('error');
+    fixture.componentInstance.retry();
+
+    maps[0].emit('load');
+    maps[0].emit('dragstart', { originalEvent: new Event('touchstart') });
+    await fixture.whenStable();
+
+    expect(maps[0].addSource).not.toHaveBeenCalled();
     expect(fixture.componentInstance.state()).toBe('initializing');
   });
 
@@ -215,6 +229,31 @@ describe('TransitMapComponent', () => {
     expect(maps[0].easeTo).toHaveBeenLastCalledWith(expect.not.objectContaining({ zoom: expect.anything() }));
     fixture.componentInstance.focus([123.9, 10.3]);
     expect(maps[0].easeTo).toHaveBeenLastCalledWith(expect.objectContaining({ zoom: 15 }));
+  });
+
+  it('offers a bounded optional pitch and returns to the default 2D camera', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    fixture.componentRef.setInput('perspective', true);
+    await fixture.whenStable();
+    expect(maps[0].easeTo).toHaveBeenLastCalledWith(expect.objectContaining({ pitch: 45, bearing: 0 }));
+
+    fixture.componentRef.setInput('perspective', false);
+    await fixture.whenStable();
+    expect(maps[0].easeTo).toHaveBeenLastCalledWith(expect.objectContaining({ pitch: 0, bearing: 0 }));
+  });
+
+  it('stops camera work while hidden and resizes on tab re-entry', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    fixture.componentRef.setInput('active', false);
+    await fixture.whenStable();
+    expect(maps[0].stop).toHaveBeenCalledOnce();
+
+    maps[0].resize.mockClear();
+    fixture.componentRef.setInput('active', true);
+    await fixture.whenStable();
+    expect(maps[0].resize).toHaveBeenCalled();
   });
 
   it('fits without animation, so tab-transition resizes or paused frames cannot abandon the fit', async () => {
