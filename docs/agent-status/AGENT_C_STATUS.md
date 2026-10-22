@@ -5,13 +5,13 @@
 - Updated at (ISO 8601, Asia/Singapore): 2026-10-23T03:17:05+08:00
 - Agent/module: C commuter, Codex under VALRYDE-C-RAPID-DELIVERY-003 and emergency takeover 002.
 - Repository/workspace: erwin-io/valryde-mobile-commuter, .codex-worktrees/agent-c-tracking.
-- Branch/base: codex/29-36-tracking-ui-adapter from origin/main e0fa549. Independent of ID 37 PR #13 (source 570bb1b, status head a4b419f).
+- Branch/base: codex/29-36-tracking-ui-adapter from origin/main e0fa549; tested source HEAD 6a5827f649141a0b350e8e0ebac76fb50b0128dc, PR #14; status-only follow-up does not change tested code. Independent of ID 37 PR #13 (source 570bb1b, status head a4b419f).
 - Implementation progress: READY_FOR_REVIEW for adapter/UI package; live IDs 29–35/count 36 remain IN_PROGRESS/INTEGRATION_BLOCKED; testable internal adapter, MapLibre markers, bounded interpolation, labels, plate/details, physical color, status/last update, direction scope, freshness and counts implemented. Live API/realtime integration BLOCKED.
 - Tech Lead decision: Not reviewed for these packages. No new Completed or Completed-ready claim; required integration evidence remains unavailable.
 - Recovery: Original checkout and six prior linked worktrees clean, no stashes/unpushed source; ignored Claude/scaffold files preserved. Two new isolated worktrees inside assigned repository only. Previous auth/map/routes/favorites/Android work already merged and reused.
 - Last confirmed result: Final tracking lint/typecheck, 20 files / 188 tests, production build 641.93 kB, Chrome 390/320 and runtime audit zero pass. Native test/lintDebug/assembleDebug passed; final latest-bundle sync/assembleDebug also passed with canonical generated paths. Primary suite 187 tests/browser/Android passes in PR #13.
 - API/contracts: Internal UI adapter is not an Agent B DTO; production default returns unavailable and performs no network request. Server eligibility is only narrowed, never computed or granted. No Traccar/Pusher/REST endpoint invented; test telemetry stays in specs.
-- Next: submit tested adapter/UI package for Agent G review; provide approved gateway/live development fixtures for integration acceptance. Agent G retains review/merge; no deploy.
+- Next: Agent G reviews PRs #13/#14; supply approved gateway/live development fixtures for integration acceptance. No merge/deploy performed. Agent G retains review/merge; no deploy.
 - Exact blockers: local configured API 127.0.0.1:3000 unreachable; Agent B approved public gateway contracts; live provider configuration, approved fixture login, Google OAuth/native links/origin/signing, OWNER_DEVICE_PENDING.
 ## Codex temporary-execution takeover — `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`
 
@@ -95,6 +95,12 @@
 - State: OWNER_VERIFICATION_PENDING. No physical-device action was attempted or delegated.
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-23 03:17 +08:00 — Rapid delivery PRs submitted
+- Tracking UI source committed/pushed as `6a5827f649141a0b350e8e0ebac76fb50b0128dc`; https://github.com/erwin-io/valryde-mobile-commuter/pull/14 open against main. Independent destination discovery PR #13 remains open (source `570bb1b8e4f76cdbdc25e463c67c5045b647b9f2`, status head `a4b419f56534cf64e0d2b94ef1c6c89b8d22d6a3`). Both attached to this chat.
+- UI/adapter development packages ready for Agent G review. IDs 22/23 merged work reused and regression-tested; 37 implemented; 29–36 actual UI advanced. Three final completion-ready IDs are NOT claimed: real G6 service and approved tracking wire integration are unavailable. No checklist status changed, self-merge or deployment.
+- Recovery preserved all original local work and ignored agent files; no stashes or original unpushed source. Both new worktrees kept for PR review. Canonical generated Android paths retained and build caches ignored.
+
 
 ### 2026-10-23 +08:00 — Tracking UI package final verification
 - Final code: lint/typecheck, 20 files / 188 tests (18 new tests beyond merged baseline), serialized production build 641.93 kB, Chrome 390/320 and runtime audit zero pass. Exact 30,000 ms inclusive / 30,001 ms expiry regression passes.
