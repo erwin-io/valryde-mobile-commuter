@@ -86,7 +86,7 @@ Do not turn provisional assumptions into contracts. Link decisions to approved b
 
 ## 6. Mandatory status reporting
 
-Follow `docs/00_SHARED_AGENT_STATUS_REPORTING_POLICY.md` version 1.1 without locally rewriting it. Maintain exactly one Agent C status file at `docs/agent-status/AGENT_C_STATUS.md`, preserving its newest-first activity log. Separate implementation progress from Tech Lead decisions and never record credentials, tokens, private user data, or sensitive GPS history.
+Follow `docs/00_SHARED_AGENT_STATUS_REPORTING_POLICY.md` version 1.2 without locally rewriting it. Maintain exactly one Agent C status file at `docs/agent-status/AGENT_C_STATUS.md`, preserving its newest-first activity log. Separate implementation progress from Tech Lead decisions and never record credentials, tokens, private user data, or sensitive GPS history.
 
 ## 7. Scope guardrails
 

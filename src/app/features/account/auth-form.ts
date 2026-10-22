@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
 // Client-side checks mirror the Agent A request schemas; the server remains the authority.
@@ -25,6 +26,14 @@ export function matching(field: string, confirm: string): ValidatorFn {
 /** Emailed challenge tokens are 20–512 characters (Agent A contract); anything else is a damaged link. */
 export function isPlausibleToken(token: string | undefined | null): token is string {
   return typeof token === 'string' && token.length >= 20 && token.length <= 512;
+}
+
+/**
+ * One-time email challenges necessarily arrive in a query string. Remove that query immediately
+ * after Angular has captured the token so it is not retained in browser history or copied URLs.
+ */
+export function scrubChallengeQuery(location: Location): void {
+  location.replaceState(location.path().split('?')[0]);
 }
 
 /** Trimmed string values; passwords are left untouched. */

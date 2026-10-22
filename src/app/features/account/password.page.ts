@@ -1,4 +1,5 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Location } from '@angular/common';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { IonBackButton } from '@ionic/angular/ion-back-button';
@@ -18,7 +19,7 @@ import { AuthApiService } from '../../core/auth/auth-api.service';
 import { authErrorMessage } from '../../core/auth/auth-errors';
 import { SessionService } from '../../core/auth/session.service';
 import { StatePanelComponent } from '../../shared/state-panel.component';
-import { PASSWORD_ERROR, isPlausibleToken, matching, passwordValidators } from './auth-form';
+import { PASSWORD_ERROR, isPlausibleToken, matching, passwordValidators, scrubChallengeQuery } from './auth-form';
 
 export type PasswordPageKind = 'reset' | 'change';
 
@@ -137,9 +138,11 @@ export type PasswordPageKind = 'reset' | 'change';
     }
   `,
 })
-export class PasswordPage {
+export class PasswordPage implements OnInit {
   private readonly api = inject(AuthApiService);
   private readonly session = inject(SessionService);
+  private readonly location = inject(Location);
+  private readonly challengeToken = signal<string | undefined>(undefined);
 
   readonly kind = input.required<PasswordPageKind>();
   /** Bound from `?token=` on the emailed reset link. */
@@ -154,10 +157,16 @@ export class PasswordPage {
     { validators: matching('password', 'confirm') },
   );
   protected readonly passwordError = PASSWORD_ERROR;
-  protected readonly missingToken = computed(() => this.kind() === 'reset' && !isPlausibleToken(this.token()));
+  protected readonly missingToken = computed(() => this.kind() === 'reset' && !isPlausibleToken(this.challengeToken()));
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly done = signal(false);
+
+  ngOnInit(): void {
+    const token = this.token();
+    this.challengeToken.set(token);
+    if (token !== undefined) scrubChallengeQuery(this.location);
+  }
 
   async submit(): Promise<void> {
     const current = this.form.controls.current;
@@ -172,7 +181,7 @@ export class PasswordPage {
     this.error.set(null);
     try {
       if (this.kind() === 'reset') {
-        await firstValueFrom(this.api.resetPassword(this.token() ?? '', password));
+        await firstValueFrom(this.api.resetPassword(this.challengeToken() ?? '', password));
       } else {
         await firstValueFrom(this.api.changePassword(current.value, password));
         await this.session.clearLocal();

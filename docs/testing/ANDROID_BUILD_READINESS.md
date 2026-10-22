@@ -4,7 +4,7 @@
 
 **Evidence date:** 2026-10-22, Asia/Manila
 
-**Base:** `origin/main` `131944f6576c71f28b797977805b264c729f4e59`
+**Base:** integrated `origin/main` `fec717e60ebb58f9cc1489e60088aa5a8db6b7af` plus independent-closure corrections
 
 ## Native project baseline
 
@@ -42,7 +42,7 @@ Set-Location android
 .\gradlew.bat assembleDebug
 ```
 
-The 2026-10-22 debug build completed successfully. The generated APK was `5,737,304` bytes with SHA-256 `F0A90797D2C3B91F05014699E1EDB3ED7520A13A1344C6FEE1B89340A50BFA7E`. Build outputs remain ignored and are not committed.
+The final independent-closure build on 2026-10-22 synchronized the post-correction production bundle and completed `test lintDebug assembleDebug` successfully. The generated APK was `6,107,403` bytes with SHA-256 `B69FD68831A69B6FC53B47B7ACB5E29CB60F5F34B69E3166CCE2A625BCB5DD53`. Build outputs remain ignored and are not committed.
 
 ## Configuration and release gates
 

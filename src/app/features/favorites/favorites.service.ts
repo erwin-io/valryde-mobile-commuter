@@ -30,19 +30,30 @@ export class FavoritesService {
   /** Newest first. */
   readonly favorites = signal<FavoriteRoute[]>([]);
   readonly loaded = signal(false);
+  /** A Preferences read failed; do not mistake an unavailable store for an empty list. */
+  readonly loadFailed = signal(false);
   private readonly ids = computed(() => new Set(this.favorites().map((f) => f.routeId)));
 
-  /** Loads once; later calls share the same load. */
+  /** Loads once after success; concurrent and retrying calls share the active read. */
   load(): Promise<void> {
-    this.loading ??= (async () => {
-      try {
-        const { value } = await this.store.get({ key: KEY });
-        this.favorites.set(parse(value));
-      } catch {
-        this.favorites.set([]); // unreadable store: start empty rather than fail the tab
-      }
-      this.loaded.set(true);
-    })();
+    if (this.loaded() && !this.loadFailed()) return Promise.resolve();
+    if (!this.loading) {
+      const active = (async () => {
+        try {
+          const { value } = await this.store.get({ key: KEY });
+          this.favorites.set(parse(value));
+          this.loadFailed.set(false);
+        } catch {
+          // Keep the current in-memory state and surface a retry. Treating this as an empty store
+          // could let a later save overwrite favorites that still exist on disk.
+          this.loadFailed.set(true);
+        }
+        this.loaded.set(true);
+      })().finally(() => {
+        if (this.loading === active) this.loading = undefined;
+      });
+      this.loading = active;
+    }
     return this.loading;
   }
 
@@ -53,6 +64,7 @@ export class FavoritesService {
   /** Saves a route (one entry per route; saving again updates the direction and moves it to the top). */
   async save(routeId: string, directionId: string | null): Promise<'saved' | 'full'> {
     await this.load();
+    if (this.loadFailed()) throw new Error('Favorite storage is unavailable');
     return this.enqueue(async () => {
       const others = this.favorites().filter((f) => f.routeId !== routeId);
       if (others.length >= MAX_FAVORITES) return 'full';
@@ -65,6 +77,7 @@ export class FavoritesService {
 
   async remove(routeId: string): Promise<void> {
     await this.load();
+    if (this.loadFailed()) throw new Error('Favorite storage is unavailable');
     await this.enqueue(async () => {
       const next = this.favorites().filter((f) => f.routeId !== routeId);
       if (next.length === this.favorites().length) return;

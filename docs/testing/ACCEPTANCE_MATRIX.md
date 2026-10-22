@@ -1,5 +1,7 @@
 # Agent C Acceptance Matrix
 
+The final integrated independent-scope disposition and current evidence are recorded in [`INDEPENDENT_UI_CLOSURE.md`](./INDEPENDENT_UI_CLOSURE.md).
+
 ## UX contract and first shell
 
 | ID | Scenario | Evidence target | Current gate |

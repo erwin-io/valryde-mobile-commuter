@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Type, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -35,7 +36,7 @@ describe('Account pages', () => {
     clearLocal: ReturnType<typeof vi.fn>;
   };
 
-  function render<T>(component: Type<T>, inputs: Record<string, unknown> = {}) {
+  function render<T>(component: Type<T>, inputs: Record<string, unknown> = {}, url?: string) {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -43,10 +44,13 @@ describe('Account pages', () => {
         { provide: SessionService, useValue: session },
       ],
     });
+    const location = TestBed.inject(Location);
+    if (url) location.go(url);
+    const replaceState = vi.spyOn(location, 'replaceState');
     const fixture = TestBed.createComponent(component);
     for (const [key, value] of Object.entries(inputs)) fixture.componentRef.setInput(key, value);
     fixture.autoDetectChanges();
-    return { fixture, page: fixture.componentInstance, text: () => fixture.nativeElement.textContent as string };
+    return { fixture, page: fixture.componentInstance, replaceState, text: () => fixture.nativeElement.textContent as string };
   }
 
   beforeEach(() => {
@@ -158,11 +162,16 @@ describe('Account pages', () => {
 
     it('reset: posts the emailed token with the new password', async () => {
       api['resetPassword'].mockReturnValue(of(null));
-      const { fixture, page, text } = render(PasswordPage, { kind: 'reset', token: 't'.repeat(32) });
+      const { fixture, page, replaceState, text } = render(
+        PasswordPage,
+        { kind: 'reset', token: 't'.repeat(32) },
+        `/auth/reset-password?token=${'t'.repeat(32)}`,
+      );
       page.form.setValue({ current: '', password: 'a brand new password', confirm: 'a brand new password' });
       await page.submit();
       await settle(fixture);
       expect(api['resetPassword']).toHaveBeenCalledWith('t'.repeat(32), 'a brand new password');
+      expect(replaceState).toHaveBeenCalledWith('/auth/reset-password');
       expect(text()).toContain('Password updated');
     });
 
@@ -184,9 +193,14 @@ describe('Account pages', () => {
   describe('EmailLinkPage', () => {
     it('verifies the token from the link once', async () => {
       api['verifyEmail'].mockReturnValue(of(testUser));
-      const { fixture, text } = render(EmailLinkPage, { kind: 'verify-email', token: 'v'.repeat(32) });
+      const { fixture, replaceState, text } = render(
+        EmailLinkPage,
+        { kind: 'verify-email', token: 'v'.repeat(32) },
+        `/auth/verify-email?token=${'v'.repeat(32)}`,
+      );
       await settle(fixture);
       expect(api['verifyEmail']).toHaveBeenCalledOnce();
+      expect(replaceState).toHaveBeenCalledWith('/auth/verify-email');
       expect(text()).toContain('Email verified');
     });
 
@@ -202,10 +216,15 @@ describe('Account pages', () => {
       session.user.set(testUser);
       const changed = { ...testUser, email: 'new@example.test' };
       api['confirmEmailChange'].mockReturnValue(of(changed));
-      const { fixture, text } = render(EmailLinkPage, { kind: 'confirm-email-change', token: 'c'.repeat(32) });
+      const { fixture, replaceState, text } = render(
+        EmailLinkPage,
+        { kind: 'confirm-email-change', token: 'c'.repeat(32) },
+        `/account/confirm-email-change?token=${'c'.repeat(32)}`,
+      );
       await settle(fixture);
       expect(session.clearLocal).toHaveBeenCalled();
       expect(session.setUser).not.toHaveBeenCalled();
+      expect(replaceState).toHaveBeenCalledWith('/account/confirm-email-change');
       expect(text()).toContain('new@example.test');
       expect(text()).toContain('Sign in again');
     });
