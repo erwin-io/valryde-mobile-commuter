@@ -2,32 +2,32 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-22T09:59:09+08:00 (Codex runtime clock; the preserved Claude handoff contains later-stamped entries)
+- Updated at (ISO 8601, Asia/Manila): 2026-10-22T10:01:36+08:00 (Codex runtime clock; the preserved Claude handoff contains later-stamped entries)
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/36-local-favorite-routes` / `e7fd599e7173b3b430feeb30edf85faf2e83726c` (PR #6); remote `main` is `50d25173619d5ac51e91f3a18204319e66c65b63`.
-- Repository status: PR #6 final-review correction is local and uncommitted. `.scaffold-reference/` and `.claude/` are preserved locally and now explicitly ignored so credential-bearing test configuration cannot be committed accidentally.
+- Branch / HEAD SHA: `feat/36-local-favorite-routes` / correction commit `0b81c73348260636c92dab8a47c3383e9b16d018` plus this status-only reverse-handover update (PR #6); remote `main` is `50d25173619d5ac51e91f3a18204319e66c65b63`.
+- Repository status: PR #6 correction is committed and pushed. `.scaffold-reference/` and `.claude/` are preserved locally and explicitly ignored so credential-bearing test configuration cannot be committed accidentally.
 - Execution agent: Codex temporary takeover from Claude under `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001` on 2026-10-22.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
 - GitHub issues / PRs: PR #5 merged to `main` at `50d2517`; PR #6 is OPEN, MERGEABLE/CLEAN at head `e7fd599e7173b3b430feeb30edf85faf2e83726c`. Earlier PRs and their decisions remain in the activity history.
-- Implementation progress: IN_PROGRESS (Codex PR #6 reliability correction verified locally; commit/push and final-head rerun pending). IDs 22–28 remain accepted and merged in PR #5.
+- Implementation progress: READY_FOR_REVIEW (PR #6 favorites portion; Codex final audit complete). IDs 22–28 remain accepted and merged in PR #5.
 - Tech Lead review decision (if actually issued): PR #5 accepted and merged at `50d2517`. PR #6's prior conflict-only `CHANGES REQUIRED` action was resolved; final Tech Lead acceptance remains pending.
-- Current objective: Final Codex review and fresh quality-gate evidence for PR #6 without self-merging.
-- Last confirmed result: Audit found and corrected a Preferences-write failure path so a failed save/remove cannot create false in-memory favorite state; the operation queue recovers for later writes. Lint, typecheck, 144 tests, production build, runtime audit, and diff check passed locally.
-- Next concrete action: Commit/push the scoped PR #6 correction, update stale PR screenshot/merge notes, rerun final-head gates, and report `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY`.
+- Current objective: `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` — await Tech Lead review without self-merging.
+- Last confirmed result: Pushed correction commit `0b81c73`; PR body now references the tracked post-merge screenshot and current resolved merge state. On that pushed source head, lint, typecheck, 144 tests, production build, runtime audit, and diff check passed.
+- Next concrete action: Tech Lead reviews PR #6. After acceptance/merge, resume only approved contract-backed route reliability or Android build-readiness work; do not start Agent A G6/Agent B-gated scopes.
 - Blocked by / decision owner: Physical Android-device integration testing is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 wait on Agent B's approved public tracking contract.
 - Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
 
 ## Codex temporary-execution takeover — `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`
 
-- Recovery checkpoint: `AGENT_C_CODEX_TAKEOVER_READY` preparation in progress.
+- Recovery checkpoint: `AGENT_C_CODEX_TAKEOVER_READY` completed; PR checkpoint `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` completed.
 - Original Claude work recovered: PR #5 merged implementation/evidence and PR #6 favorites implementation, conflict resolution, tests, screenshot, and status history are present and retained.
 - Open PR state: PR #6 is open, mergeable, and clean on GitHub at the same SHA as local HEAD; GitGuardian is passing.
 - Uncommitted work preserved: `.claude/` and `.scaffold-reference/` remain untracked and untouched. The local-only values under `.claude/` must never be committed or printed.
 - Canonical governance pending: valryde-api PR #16 for `VALRYDE-MOBILE-TESTING-POLICY-001` is open/mergeable, not merged; no canonical synchronization is claimed.
-- Tests executed by Codex after takeover: None yet. Earlier Claude results remain historical evidence and will be rerun before final-review readiness.
-- Exact implementation package: PR #6 final audit, current-head gates, evidence-link correction, status/reverse-handover update; then only contract-backed route reliability work after the PR checkpoint.
+- Tests executed by Codex after takeover: Lint, strict app/spec typecheck, 15 test files / 144 tests, production build, runtime dependency audit, full dependency audit, and diff check. Android environment inventory was performed; no physical-device test was claimed.
+- Exact implementation package delivered: PR #6 final audit, Preferences failure correction, current-head gates, screenshot/merge-note correction, and reverse-handover status. Next work remains contingent on Tech Lead review and approved contracts.
 
 ## Checklist coverage
 
@@ -84,6 +84,17 @@
 - State: OWNER_VERIFICATION_PENDING (not attempted).
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-22 10:01 +08:00 — PR #6 Codex final-review checkpoint
+
+- Action / reason: Pushed the scoped persistence correction to the existing PR #6 branch, replaced outdated PR merge/screenshot notes with current evidence, and reran every applicable automated gate on the pushed source head.
+- Checklist/issue: ID 36 favorites portion; PR #6; takeover directive `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`.
+- Files/config/services affected: Commit `0b81c73348260636c92dab8a47c3383e9b16d018`; PR #6 description; this status-only reverse handover. No backend, Traccar, database, production, or physical-device change.
+- Observed result (success/failure/rollback): Success. PR #6 remains open and unmerged. The stale screenshot path and obsolete expected-conflict note are gone. The PR describes the merged-main state, tracked screenshot, storage-failure behavior, Android gate, and current tests.
+- Validation and evidence: `npm run lint`, `npm run typecheck`, `npm test` (15 files / 144 tests), `npm run build` (640.99 kB initial), `npm audit --omit=dev` (0), and `git diff --check` all passed on pushed source commit `0b81c73`. GitGuardian passed. Full audit findings remain dev-tooling-only and are recorded above.
+- Contracts / risks / dependencies: No shared contract change. Android project/SDK setup and physical-device evidence remain owner-gated. Mobile-policy sync remains deferred until valryde-api PR #16 merges. IDs 29–35/available count and ID 37 remain Agent B/Agent A G6 gated.
+- Commit/PR link or SHA (if available): PR #6 https://github.com/erwin-io/valryde-mobile-commuter/pull/6; correction `0b81c73348260636c92dab8a47c3383e9b16d018`.
+- Next action / owner gate: Tech Lead reviews PR #6 and issues ACCEPTED, CHANGES REQUIRED, or OPERATOR-GATED. Codex must not self-merge.
 
 ### 2026-10-22 09:58 +08:00 — Codex PR #6 reliability audit and local correction
 
