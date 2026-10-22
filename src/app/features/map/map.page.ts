@@ -51,19 +51,26 @@ import { TransitMapComponent } from './transit-map.component';
         </ion-button>
       </div>
       <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="recenter">
-        <ion-fab-button
-          [color]="following() ? 'primary' : 'light'"
-          [attr.aria-label]="following() ? 'Stop following my location' : 'Show and follow my location'"
-          [attr.aria-pressed]="following()"
-          [disabled]="locating()"
-          (click)="recenter()"
-        >
-          @if (locating()) {
-            <ion-spinner aria-hidden="true" />
-          } @else {
-            <ion-icon [name]="following() ? 'navigate' : 'locate-outline'" aria-hidden="true" />
-          }
-        </ion-fab-button>
+        <!-- ion-fab-button copies aria-* into its shadow button only once, so each state gets its own button. -->
+        @if (following()) {
+          <ion-fab-button color="primary" aria-label="Stop following my location" aria-pressed="true" (click)="recenter()">
+            <ion-icon name="navigate" aria-hidden="true" />
+          </ion-fab-button>
+        } @else {
+          <ion-fab-button
+            color="light"
+            aria-label="Show and follow my location"
+            aria-pressed="false"
+            [disabled]="locating()"
+            (click)="recenter()"
+          >
+            @if (locating()) {
+              <ion-spinner aria-hidden="true" />
+            } @else {
+              <ion-icon name="locate-outline" aria-hidden="true" />
+            }
+          </ion-fab-button>
+        }
       </ion-fab>
 
       <ion-modal

@@ -174,9 +174,17 @@ describe('MapPage recenter', () => {
       const { fixture, page } = await setup(located);
       await page.recenter();
       await fixture.whenStable();
-      const button = fixture.nativeElement.querySelector('ion-fab-button') as HTMLElement;
-      expect(button.getAttribute('aria-pressed')).toBe('true');
-      expect(button.getAttribute('aria-label')).toBe('Stop following my location');
+      // Ionic copies aria-* into the shadow button (what screen readers read) once; read it there when present.
+      const aria = (name: string) => {
+        const host = fixture.nativeElement.querySelector('ion-fab-button') as HTMLElement;
+        return host.shadowRoot?.querySelector('button')?.getAttribute(name) ?? host.getAttribute(name);
+      };
+      expect(aria('aria-pressed')).toBe('true');
+      expect(aria('aria-label')).toBe('Stop following my location');
+      await page.recenter();
+      await fixture.whenStable();
+      expect(aria('aria-pressed')).toBe('false');
+      expect(aria('aria-label')).toBe('Show and follow my location');
     });
   });
 
