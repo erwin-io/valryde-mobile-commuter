@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonButton } from '@ionic/angular/ion-button';
@@ -11,7 +12,7 @@ import { AuthApiService, AuthUser } from '../../core/auth/auth-api.service';
 import { authErrorMessage } from '../../core/auth/auth-errors';
 import { SessionService } from '../../core/auth/session.service';
 import { StatePanelComponent } from '../../shared/state-panel.component';
-import { isPlausibleToken } from './auth-form';
+import { isPlausibleToken, scrubChallengeQuery } from './auth-form';
 
 export type EmailLinkKind = 'verify-email' | 'confirm-email-change';
 
@@ -74,6 +75,7 @@ export type EmailLinkKind = 'verify-email' | 'confirm-email-change';
 export class EmailLinkPage implements OnInit {
   private readonly api = inject(AuthApiService);
   private readonly session = inject(SessionService);
+  private readonly location = inject(Location);
 
   readonly kind = input.required<EmailLinkKind>();
   /** Bound from `?token=`. */
@@ -88,6 +90,7 @@ export class EmailLinkPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const token = this.token();
+    if (token !== undefined) scrubChallengeQuery(this.location);
     // Rejected locally: a truncated or damaged link is never sent to the API.
     if (!isPlausibleToken(token)) {
       this.error.set('The link is incomplete or damaged. Open it again from your email.');

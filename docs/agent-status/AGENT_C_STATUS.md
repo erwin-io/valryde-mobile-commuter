@@ -2,20 +2,20 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-22T12:29:46+08:00 (preserved historical entries may contain later wall-clock stamps from prior executors)
+- Updated at (ISO 8601, Asia/Manila): 2026-10-22T13:35:07+08:00 (preserved historical entries may contain later wall-clock stamps from prior executors)
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: designated coordination branch `build/commuter-android-readiness`; Android source head `6554906a48f5662d93fece19629bdcb2e136ccc1` plus this status/handoff commit (PR #8). Package heads: C1 `2d732f03bf0d8931f4b537f79a9b3c9bfca06f08`, C2 `c2e33acc33a1d26847f1e5be0be5537f07f409b0`, C3 `a03c01ec558a193ff3920003acb158ac50ef0f0d`, C5 `c24e055a92c2e7729f89bd05a1e9ddb14fde68e9`. Remote `main` is `131944f6576c71f28b797977805b264c729f4e59` (PR #6 merged).
-- Repository status: five focused branches are pushed and open for review as PRs #7–#11. The original checkout's ignored `.scaffold-reference/` and `.claude/` directories remain preserved and were never copied into the worktrees or committed.
-- Execution agent: Codex temporary takeover from Claude under `VALRYDE-CODEX-C-PARALLEL-RELEASE-002` on 2026-10-22.
+- Branch / HEAD SHA: `fix/22-28-36-independent-closure` from integrated `origin/main` `fec717e60ebb58f9cc1489e60088aa5a8db6b7af`; closure commit/PR pending at this snapshot.
+- Repository status: PRs #7–#11 are merged in `main`; scoped closure source/tests/docs are being prepared for review. The original checkout's ignored `.scaffold-reference/` and `.claude/` directories remain preserved and were never copied or printed.
+- Execution agent: Codex under `VALRYDE-CODEX-C-INDEPENDENT-CLOSURE-003` on 2026-10-22.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.2; local copy matches canonical `valryde-api` `origin/main` blob `deff1bb0a5a9ffab9abd8132067ea0d5898e53ff`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PR #6 merged to `main` at `131944f`; open package PRs are #11 (C1 account), #7 (C2 map), #10 (C3 transit), #8 (C4 Android/status coordination), and #9 (C5 tracking test foundation).
-- Implementation progress: READY_FOR_REVIEW for all five authorized packages. Previously merged application features remain preserved; backend-dependent tracking and ID 37 functionality remain not implemented.
-- Tech Lead review decision (if actually issued): No decision yet for PRs #7–#11. Prior PRs #5/#6 are merged; historical review details remain below.
-- Current objective: `AGENT_C_PARALLEL_DEVELOPMENT_READY_FOR_REVIEW` — await Tech Lead review without self-merging.
-- Last confirmed result: Every package passed lint, strict typecheck, its complete regression suite, production build, runtime audit, and diff hygiene. C4 additionally passed Capacitor sync and Gradle `testDebugUnitTest lintDebug assembleDebug`, producing the documented debug APK.
-- Next concrete action: Tech Lead reviews PRs #7–#11 in dependency-safe order and issues `ACCEPTED`, `CHANGES REQUIRED`, or `OPERATOR-GATED`; owner confirms Android app identity/API environment and performs device evidence.
+- GitHub issues / PRs: PRs #6–#11 are merged. A focused independent-closure PR will be opened from the current branch and must not be self-merged.
+- Implementation progress: Independent frontend scope for IDs 22–28 and Favorites portion of 36 is complete and ready for Tech Lead review. IDs 29–35, available count 36 and ID 37 remain explicitly contract-gated.
+- Tech Lead review decision (if actually issued): No decision yet for this closure branch. Merged PR evidence is recorded without claiming physical-device acceptance.
+- Current objective: `AGENT_C_UI_INDEPENDENT_SCOPE_COMPLETE` — submit the focused correction PR and await review.
+- Last confirmed result: Integrated web baseline and correction gates pass; real Chrome-engine regression passes; Capacitor sync and Gradle `test lintDebug assembleDebug` pass; the new APK hash is documented.
+- Next concrete action: Tech Lead reviews the closure PR; owner performs the reserved physical-device and release-configuration gates.
 - Blocked by / decision owner: Physical Android-device integration is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 remain gated on Agent B's approved public consumer contracts.
 - Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
 
@@ -41,17 +41,20 @@
 
 | Checklist ID | Feature / slice | Progress | Evidence (files/tests/PR) | Blocker / next action |
 |---:|---|---|---|---|
-| 22 | Commuter signup/login/profile | READY_FOR_REVIEW hardening (PR #11); baseline merged | Request timeout, storage-failure truthfulness, revoked/concurrent session tests; 151 tests | Google sign-in gated on owner provider config; G5 deep links; device verification |
-| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE baseline + READY_FOR_REVIEW hardening (PR #7) | Optional bounded pitch, hidden-tab lifecycle, location validation/cleanup; 152 tests | Device location verification; offline tiles blocked on provider-approved caching |
-| 24–28 | Route search/list/details/direction/line | DONE_AFTER_ACCEPTANCE baseline + READY_FOR_REVIEW hardening (PR #10) | Request cancellation, serialized pagination, de-duplication; 147 tests | Current real API unavailable during read-only attempt; populated approved dev data needed |
-| 29–35 | Live availability/movement/details/status | NOT_STARTED; test foundation READY_FOR_REVIEW (PR #9) | Contract-neutral clocks/animation/cancellation/synthetic fixtures/privacy tests; 149 tests | Approved Agent B public DTO, REST, Pusher, ordering/removal and reconciliation contracts |
-| 36 | Available count/favorites | Favorites DONE_AFTER_ACCEPTANCE (PR #6 merged); count NOT_STARTED; foundation PR #9 | Device-local favorites in main; privacy/test utilities only for future count consumer | Active jeepney count gated on Agent B; favorites remain device-local |
+| 22 | Commuter signup/login/profile | INDEPENDENT_SCOPE_COMPLETE; closure PR pending | Merged PR #11 plus URL-token scrub and integrated 170-test suite | Google sign-in, native links/origin and physical-device storage remain owner/external gates |
+| 23 | Landing/map/current location | INDEPENDENT_SCOPE_COMPLETE | Merged PR #7; integrated unit/component/browser/Android evidence | Device permission/rotation acceptance; offline tiles blocked on provider-approved caching |
+| 24–28 | Route search/list/details/direction/line | INDEPENDENT_SCOPE_COMPLETE | Merged PR #10; real Chrome controlled-contract regression; integrated suite | Populated deployed API remains environment acceptance, not independent implementation |
+| 29–35 | Live availability/movement/details/status | CONTRACT_GATED; foundation merged only | PR #9 merged as contract-neutral clocks/animation/privacy tests | Approved Agent B public DTO, REST, Pusher, ordering/removal and reconciliation contracts |
+| 36 | Available count/favorites | Favorites INDEPENDENT_SCOPE_COMPLETE; count CONTRACT_GATED | PR #6 plus restart/failed-read/withdrawn-route browser and unit coverage | Count gated on Agent B; physical-device Preferences persistence owner-gated |
 | 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" gated form | Agent A G6 |
 
 ## Latest verification
 
 | Command / check | Environment | Result | Date/time | Evidence / notes |
 |---|---|---|---|---|
+| Integrated closure: lint, strict typecheck, `npm test`, production build, runtime audit, full audit, diff check | Windows; integrated main plus closure corrections | PASSED | 2026-10-22 13:39 +08:00 | 17 files / 170 tests; initial 641.62 kB raw / 170.37 kB transfer; 0 runtime vulnerabilities; full audit remains 3 high, 3 moderate, 1 low in development tooling only. |
+| Integrated closure: installed-Chrome engine regression | Chrome headless; 390×844 and 320×568; controlled approved-shape responses | PASSED | 2026-10-22 13:32 +08:00 | MapLibre canvas/tabs, route list, Favorites reload/remove/withdrawn route, and email-token URL scrubbing passed. Expected mocked 404 was the only console network error. |
+| Integrated closure: final production sync + Gradle `test lintDebug assembleDebug` | Windows; API 36; JBR 21.0.7; Gradle 8.14.3; AGP 8.13.0 | PASSED | 2026-10-22 13:43 +08:00 | Post-correction web bundle synchronized; APK 6,107,403 bytes; SHA-256 `B69FD68831A69B6FC53B47B7ACB5E29CB60F5F34B69E3166CCE2A625BCB5DD53`. Physical-device acceptance not claimed. |
 | C1 PR #11: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:16 +08:00 | 16 files / 151 tests; 0 runtime vulnerabilities. New evidence is mocked Angular/native-storage regression coverage. |
 | C2 PR #7: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:20 +08:00 | 15 files / 152 tests; component coverage for pitch, reduced motion, hidden tabs, stale callbacks and geolocation cleanup; 0 runtime vulnerabilities. |
 | C3 PR #10: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:23 +08:00 | 15 files / 147 tests; 0 runtime vulnerabilities. Read-only `127.0.0.1:3000` health request was refused, so no new real-API result is claimed. |
@@ -98,6 +101,17 @@
 - State: OWNER_VERIFICATION_PENDING. No physical-device action was attempted or delegated.
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-22 13:35 +08:00 — Integrated independent UI closure completed
+
+- Action / reason: Audited the combined application from current `origin/main` after merged PRs #7–#11, corrected the remaining frontend-independent security and persistence gaps, and executed the final web/browser/Android quality gates.
+- Checklist/issue: IDs 22–28 and Favorites portion of 36; directive `VALRYDE-CODEX-C-INDEPENDENT-CLOSURE-003`.
+- Files/config/services affected: account challenge URL handling/tests; Favorites service/page/tests; Agent instructions; acceptance, Android, closure and handoff documentation. No backend, infrastructure, wire contract, tile cache, realtime feature, production service or physical device changed.
+- Observed result (success/failure/rollback): Success. Email challenge tokens are removed from the current history entry after capture. Favorites read failure is visible/retryable and blocks writes until storage is readable; restart restoration is covered. PRs #7–#11 were confirmed merged before the work began.
+- Validation and evidence: Integrated baseline passed lint, typecheck, 167 tests, build and runtime audit. Closure passes focused 48 tests and final 17-file/170-test gates; real installed-Chrome regression at 390×844/320×568 passed map/route/Favorites/token flows. The final production bundle was then synchronized; Gradle `test lintDebug assembleDebug` passed; APK 6,107,403 bytes, SHA-256 `B69FD68831A69B6FC53B47B7ACB5E29CB60F5F34B69E3166CCE2A625BCB5DD53`.
+- Contracts / risks / dependencies: No contract change. IDs 29–35/count 36 wait on Agent B; ID 37 waits on Agent A G6. Offline maps remain unclaimed without provider-approved cache rights. OAuth/deep links/native origin/app identity/signing and physical-device acceptance remain owner/external gates.
+- Commit/PR link or SHA (if available): Closure branch `fix/22-28-36-independent-closure`; commit/PR added after final gates.
+- Next action / owner gate: Open the focused PR without self-merging; Tech Lead reviews; owner performs physical-device acceptance.
 
 ### 2026-10-22 12:35 +08:00 — Approved shared reporting policy v1.2 synchronized
 

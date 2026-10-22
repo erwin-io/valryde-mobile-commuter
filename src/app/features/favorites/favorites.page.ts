@@ -55,6 +55,14 @@ type Resolved =
         <div class="loading" role="status" aria-label="Loading favorites">
           <ion-skeleton-text [animated]="true" class="skeleton" />
         </div>
+      } @else if (favorites.loadFailed()) {
+        <app-state-panel
+          icon="alert-circle-outline"
+          title="Couldn’t read favorites"
+          body="Your saved routes may still be on this device. Try again before adding or removing favorites."
+          actionLabel="Try again"
+          (action)="refresh()"
+        />
       } @else if (favorites.favorites().length === 0) {
         <app-state-panel
           icon="star-outline"
@@ -109,7 +117,7 @@ type Resolved =
           }
         </ion-list>
       }
-      @if (favorites.loaded()) {
+      @if (favorites.loaded() && !favorites.loadFailed()) {
         <ion-note class="device-note">Favorites are saved on this device only. They aren’t synced to your account or other devices.</ion-note>
       }
       @if (storageError()) {

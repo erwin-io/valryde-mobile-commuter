@@ -101,18 +101,34 @@ describe('FavoritesService', () => {
     ]);
   });
 
-  it('starts empty when the stored value is corrupt or the store fails', async () => {
+  it('starts empty when the stored value is corrupt', async () => {
     setup('{not json');
     await favorites.load();
     expect(favorites.favorites()).toEqual([]);
-    TestBed.resetTestingModule();
-    store = fakePreferences();
+    expect(favorites.loadFailed()).toBe(false);
+  });
+
+  it('surfaces a storage read failure and refuses to overwrite unknown persisted data', async () => {
+    setup();
     store.get.mockRejectedValue(new Error('unavailable'));
-    TestBed.configureTestingModule({ providers: [{ provide: FAVORITES_STORE, useValue: store }] });
-    favorites = TestBed.inject(FavoritesService);
     await favorites.load();
     expect(favorites.loaded()).toBe(true);
-    expect(favorites.favorites()).toEqual([]);
+    expect(favorites.loadFailed()).toBe(true);
+    await expect(favorites.save('route-1', null)).rejects.toThrow('Favorite storage is unavailable');
+    expect(store.set).not.toHaveBeenCalled();
+  });
+
+  it('restores saved favorites after an app-service restart', async () => {
+    setup();
+    await favorites.save('route-1', 'dir-a');
+    const persistedStore = store;
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: FAVORITES_STORE, useValue: persistedStore }] });
+    favorites = TestBed.inject(FavoritesService);
+    await favorites.load();
+    expect(favorites.favorites()).toEqual([
+      { routeId: 'route-1', directionId: 'dir-a', savedAt: expect.any(Number) },
+    ]);
   });
 
   it('serializes writes so the last change wins', async () => {
@@ -171,6 +187,19 @@ describe('FavoritesPage', () => {
     const { text } = await render([]);
     expect(text()).toContain('No favorite routes yet');
     expect(text()).toContain('saved on this device only');
+  });
+
+  it('shows a retry instead of an empty list when device storage cannot be read', async () => {
+    const store = fakePreferences(JSON.stringify([{ routeId: 'route-1', directionId: null, savedAt: 1 }]));
+    store.get.mockRejectedValueOnce(new Error('device locked'));
+    const { fixture, page, text } = await render([], store);
+    expect(text()).toContain('Couldn’t read favorites');
+    expect(text()).not.toContain('No favorite routes yet');
+
+    get.mockReturnValue(of(transitRoute()));
+    await page.refresh();
+    await settle(fixture);
+    expect(text()).toContain('17B');
   });
 
   it('lists saved routes with the saved direction and opens the existing map flow', async () => {

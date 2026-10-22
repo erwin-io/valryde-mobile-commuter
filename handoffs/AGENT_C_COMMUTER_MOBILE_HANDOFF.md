@@ -84,3 +84,9 @@ All package lint, strict typecheck, complete tests, production builds, runtime a
 Still gated: Agent B public snapshot/realtime/count contracts for IDs 29–35 and count 36; Agent A G6 for ID 37; Google OAuth and native deep links; approved native API origin/CORS; final app ID/signing/art; Android Studio supported-version upgrade; owner-operated physical-device evidence. `valryde-api` PR #16 remains open, so no merged canonical mobile-testing-policy synchronization is claimed.
 
 Do not self-merge. Resume by checking the current heads/checks and Tech Lead decisions on PRs #7–#11, then preserve this status/history when rebasing any later package onto newly merged main.
+
+## Current reverse handoff — 2026-10-22 independent UI closure
+
+PRs #7–#11 are now merged in integrated `origin/main` `fec717e60ebb58f9cc1489e60088aa5a8db6b7af`. The final combined audit found and corrected two independent gaps: emailed one-time tokens are now removed from the current URL/history entry after capture, and a failed Favorites store read can no longer masquerade as an empty list or permit a destructive overwrite. App-restart Favorites coverage and a real Chrome-engine regression were added to the verification evidence.
+
+The combined web and Android gates pass; see `docs/testing/INDEPENDENT_UI_CLOSURE.md` and `docs/testing/ANDROID_BUILD_READINESS.md`. Do not extend IDs 29–35, the available-count portion of 36, or ID 37 until their named Agent B/Agent A contracts are approved. Owner-only physical-device, OAuth, deep-link, app identity/signing and native API-origin gates remain explicit. The closure PR is for Tech Lead review and must not be self-merged.
