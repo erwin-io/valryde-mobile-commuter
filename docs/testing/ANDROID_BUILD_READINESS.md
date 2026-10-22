@@ -1,7 +1,9 @@
 # Android Build Readiness
 
-**Scope:** Agent C / mandatory mobile quality gate  
-**Evidence date:** 2026-10-22, Asia/Manila  
+**Scope:** Agent C / mandatory mobile quality gate
+
+**Evidence date:** 2026-10-22, Asia/Manila
+
 **Base:** `origin/main` `131944f6576c71f28b797977805b264c729f4e59`
 
 ## Native project baseline
