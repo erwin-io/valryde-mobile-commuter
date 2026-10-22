@@ -5,15 +5,15 @@
 - Updated at (ISO 8601, Asia/Manila): 2026-10-22T13:35:07+08:00 (preserved historical entries may contain later wall-clock stamps from prior executors)
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `fix/22-28-36-independent-closure` from integrated `origin/main` `fec717e60ebb58f9cc1489e60088aa5a8db6b7af`; closure commit/PR pending at this snapshot.
-- Repository status: PRs #7–#11 are merged in `main`; scoped closure source/tests/docs are being prepared for review. The original checkout's ignored `.scaffold-reference/` and `.claude/` directories remain preserved and were never copied or printed.
+- Branch / HEAD SHA: `fix/22-28-36-independent-closure` from integrated `origin/main` `fec717e60ebb58f9cc1489e60088aa5a8db6b7af`; tested closure source commit `59196b2` plus this status follow-up in PR #12.
+- Repository status: PRs #7–#11 are merged in `main`; focused closure PR #12 is open for review. The original checkout's ignored `.scaffold-reference/` and `.claude/` directories remain preserved and were never copied or printed.
 - Execution agent: Codex under `VALRYDE-CODEX-C-INDEPENDENT-CLOSURE-003` on 2026-10-22.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.2; local copy matches canonical `valryde-api` `origin/main` blob `deff1bb0a5a9ffab9abd8132067ea0d5898e53ff`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PRs #6–#11 are merged. A focused independent-closure PR will be opened from the current branch and must not be self-merged.
+- GitHub issues / PRs: PRs #6–#11 are merged. Closure PR #12 is open and must not be self-merged.
 - Implementation progress: Independent frontend scope for IDs 22–28 and Favorites portion of 36 is complete and ready for Tech Lead review. IDs 29–35, available count 36 and ID 37 remain explicitly contract-gated.
-- Tech Lead review decision (if actually issued): No decision yet for this closure branch. Merged PR evidence is recorded without claiming physical-device acceptance.
-- Current objective: `AGENT_C_UI_INDEPENDENT_SCOPE_COMPLETE` — submit the focused correction PR and await review.
+- Tech Lead review decision (if actually issued): No decision yet for PR #12. Merged PR evidence is recorded without claiming physical-device acceptance.
+- Current objective: `AGENT_C_UI_INDEPENDENT_SCOPE_COMPLETE` — PR #12 submitted; await review.
 - Last confirmed result: Integrated web baseline and correction gates pass; real Chrome-engine regression passes; Capacitor sync and Gradle `test lintDebug assembleDebug` pass; the new APK hash is documented.
 - Next concrete action: Tech Lead reviews the closure PR; owner performs the reserved physical-device and release-configuration gates.
 - Blocked by / decision owner: Physical Android-device integration is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 remain gated on Agent B's approved public consumer contracts.
@@ -110,8 +110,8 @@
 - Observed result (success/failure/rollback): Success. Email challenge tokens are removed from the current history entry after capture. Favorites read failure is visible/retryable and blocks writes until storage is readable; restart restoration is covered. PRs #7–#11 were confirmed merged before the work began.
 - Validation and evidence: Integrated baseline passed lint, typecheck, 167 tests, build and runtime audit. Closure passes focused 48 tests and final 17-file/170-test gates; real installed-Chrome regression at 390×844/320×568 passed map/route/Favorites/token flows. The final production bundle was then synchronized; Gradle `test lintDebug assembleDebug` passed; APK 6,107,403 bytes, SHA-256 `B69FD68831A69B6FC53B47B7ACB5E29CB60F5F34B69E3166CCE2A625BCB5DD53`.
 - Contracts / risks / dependencies: No contract change. IDs 29–35/count 36 wait on Agent B; ID 37 waits on Agent A G6. Offline maps remain unclaimed without provider-approved cache rights. OAuth/deep links/native origin/app identity/signing and physical-device acceptance remain owner/external gates.
-- Commit/PR link or SHA (if available): Closure branch `fix/22-28-36-independent-closure`; commit/PR added after final gates.
-- Next action / owner gate: Open the focused PR without self-merging; Tech Lead reviews; owner performs physical-device acceptance.
+- Commit/PR link or SHA (if available): Tested source/docs commit `59196b2`; PR #12: `https://github.com/erwin-io/valryde-mobile-commuter/pull/12`.
+- Next action / owner gate: Tech Lead reviews PR #12 without self-merge; owner performs physical-device acceptance.
 
 ### 2026-10-22 12:35 +08:00 — Approved shared reporting policy v1.2 synchronized
 
