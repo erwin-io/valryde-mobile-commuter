@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { toApiFailure } from '../../core/api-failure';
 import { RouteLine } from '../map/transit-map.component';
@@ -15,6 +15,10 @@ export class RouteSelectionService {
   private readonly cache = inject(RouteCacheService);
   private request?: Subscription;
   private routeId: string | null = null;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.request?.unsubscribe());
+  }
 
   readonly state = signal<RouteDetailState | null>(null);
   private readonly directionId = signal<string | null>(null);

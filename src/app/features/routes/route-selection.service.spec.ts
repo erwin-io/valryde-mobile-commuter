@@ -85,7 +85,15 @@ describe('RouteSelectionService', () => {
   it('ignores a slow response for a route the user already left', () => {
     selection.select('route-1', null);
     selection.select('route-2', null);
+    expect(responses[0].observed).toBe(false);
     responses[0].next(transitRoute({ id: 'route-1' }));
     expect(selection.state()).toEqual({ status: 'loading' });
+  });
+
+  it('releases an unfinished detail request when its injector is destroyed', () => {
+    selection.select('route-1', null);
+    expect(responses[0].observed).toBe(true);
+    TestBed.resetTestingModule();
+    expect(responses[0].observed).toBe(false);
   });
 });
