@@ -2,21 +2,21 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-22T10:01:36+08:00 (Codex runtime clock; the preserved Claude handoff contains later-stamped entries)
+- Updated at (ISO 8601, Asia/Manila): 2026-10-22T12:29:46+08:00 (preserved historical entries may contain later wall-clock stamps from prior executors)
 - Agent / module: C — Commuter Mobile
 - Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `feat/36-local-favorite-routes` / correction commit `0b81c73348260636c92dab8a47c3383e9b16d018` plus this status-only reverse-handover update (PR #6); remote `main` is `50d25173619d5ac51e91f3a18204319e66c65b63`.
-- Repository status: PR #6 correction is committed and pushed. `.scaffold-reference/` and `.claude/` are preserved locally and explicitly ignored so credential-bearing test configuration cannot be committed accidentally.
-- Execution agent: Codex temporary takeover from Claude under `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001` on 2026-10-22.
+- Branch / HEAD SHA: designated coordination branch `build/commuter-android-readiness`; Android source head `6554906a48f5662d93fece19629bdcb2e136ccc1` plus this status/handoff commit (PR #8). Package heads: C1 `2d732f03bf0d8931f4b537f79a9b3c9bfca06f08`, C2 `c2e33acc33a1d26847f1e5be0be5537f07f409b0`, C3 `a03c01ec558a193ff3920003acb158ac50ef0f0d`, C5 `c24e055a92c2e7729f89bd05a1e9ddb14fde68e9`. Remote `main` is `131944f6576c71f28b797977805b264c729f4e59` (PR #6 merged).
+- Repository status: five focused branches are pushed and open for review as PRs #7–#11. The original checkout's ignored `.scaffold-reference/` and `.claude/` directories remain preserved and were never copied into the worktrees or committed.
+- Execution agent: Codex temporary takeover from Claude under `VALRYDE-CODEX-C-PARALLEL-RELEASE-002` on 2026-10-22.
 - Governance version: Shared AI Agent Status & Activity Reporting Policy 1.1; local copy matches canonical `valryde-api` `origin/main` blob `8a5df8ae6fbc483e45cf63f10cdda438b6c6138c`.
 - Checklist IDs: 22–37
-- GitHub issues / PRs: PR #5 merged to `main` at `50d2517`; PR #6 is OPEN, MERGEABLE/CLEAN at head `e7fd599e7173b3b430feeb30edf85faf2e83726c`. Earlier PRs and their decisions remain in the activity history.
-- Implementation progress: READY_FOR_REVIEW (PR #6 favorites portion; Codex final audit complete). IDs 22–28 remain accepted and merged in PR #5.
-- Tech Lead review decision (if actually issued): PR #5 accepted and merged at `50d2517`. PR #6's prior conflict-only `CHANGES REQUIRED` action was resolved; final Tech Lead acceptance remains pending.
-- Current objective: `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` — await Tech Lead review without self-merging.
-- Last confirmed result: Pushed correction commit `0b81c73`; PR body now references the tracked post-merge screenshot and current resolved merge state. On that pushed source head, lint, typecheck, 144 tests, production build, runtime audit, and diff check passed.
-- Next concrete action: Tech Lead reviews PR #6. After acceptance/merge, resume only approved contract-backed route reliability or Android build-readiness work; do not start Agent A G6/Agent B-gated scopes.
-- Blocked by / decision owner: Physical Android-device integration testing is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 wait on Agent B's approved public tracking contract.
+- GitHub issues / PRs: PR #6 merged to `main` at `131944f`; open package PRs are #11 (C1 account), #7 (C2 map), #10 (C3 transit), #8 (C4 Android/status coordination), and #9 (C5 tracking test foundation).
+- Implementation progress: READY_FOR_REVIEW for all five authorized packages. Previously merged application features remain preserved; backend-dependent tracking and ID 37 functionality remain not implemented.
+- Tech Lead review decision (if actually issued): No decision yet for PRs #7–#11. Prior PRs #5/#6 are merged; historical review details remain below.
+- Current objective: `AGENT_C_PARALLEL_DEVELOPMENT_READY_FOR_REVIEW` — await Tech Lead review without self-merging.
+- Last confirmed result: Every package passed lint, strict typecheck, its complete regression suite, production build, runtime audit, and diff hygiene. C4 additionally passed Capacitor sync and Gradle `testDebugUnitTest lintDebug assembleDebug`, producing the documented debug APK.
+- Next concrete action: Tech Lead reviews PRs #7–#11 in dependency-safe order and issues `ACCEPTED`, `CHANGES REQUIRED`, or `OPERATOR-GATED`; owner confirms Android app identity/API environment and performs device evidence.
+- Blocked by / decision owner: Physical Android-device integration is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 remain gated on Agent B's approved public consumer contracts.
 - Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
 
 ## Codex temporary-execution takeover — `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`
@@ -29,21 +29,35 @@
 - Tests executed by Codex after takeover: Lint, strict app/spec typecheck, 15 test files / 144 tests, production build, runtime dependency audit, full dependency audit, and diff check. Android environment inventory was performed; no physical-device test was claimed.
 - Exact implementation package delivered: PR #6 final audit, Preferences failure correction, current-head gates, screenshot/merge-note correction, and reverse-handover status. Next work remains contingent on Tech Lead review and approved contracts.
 
+## Codex parallel development release — `VALRYDE-CODEX-C-PARALLEL-RELEASE-002`
+
+- Mandatory recovery confirmed `origin/main` `131944f` includes merged PRs #1–#6 and that no commuter PR was open before this release. Governance, handoff, architecture, acceptance, current source, Agent A contracts, and the still-proposed Agent B material were re-read.
+- Five worktrees were created from the same verified main revision. Parallel helper agents produced partial scoped diffs but exhausted their execution allowance; Codex preserved, audited, corrected, completed, tested, committed, and pushed each worktree rather than discarding that work.
+- Shared-file coordination: C1, C2, C3, and C5 avoid the root status/handoff. C4 PR #8 is the designated coordination stream for this status and reverse handoff.
+- No backend, infrastructure, Agent B DTO, Pusher channel, REST tracking route, availability rule, OAuth value, secret, signing key, or production endpoint was created.
+- Full dependency audit remains 3 high, 3 moderate, and 1 low in development tooling chains; runtime audit is zero. Automated package gates pass. Physical-device evidence is not claimed.
+
 ## Checklist coverage
 
 | Checklist ID | Feature / slice | Progress | Evidence (files/tests/PR) | Blocker / next action |
 |---:|---|---|---|---|
-| 22 | Commuter signup/login/profile | IN_PROGRESS (core and completion states merged in PR #4/#5) | Damaged-link validation, resend page, disabled-account copy, server-ended notice | Google sign-in gated on owner provider config; G5 deep links; device verification |
-| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE (PR #5 merged `50d2517`) | Follow mode, fit-to-route robustness, sheet across tabs | Device location verification (owner, VALRYDE-MOBILE-TESTING-POLICY-001) |
-| 24–28 | Route search/list/details/direction/line | DONE_AFTER_ACCEPTANCE (PR #5 merged `50d2517`) | Offline route cache, timeouts, color validation | Stable populated dev data |
-| 29–35 | Live availability/movement/details/status | NOT_STARTED | Gated note only | Approved Agent B contracts |
-| 36 | Available count/favorites | READY_FOR_REVIEW (favorites only, PR B); count NOT_STARTED | `features/favorites/*`, star toggle in route sheet; 16 favorites tests; real 404 handling | Active jeepney count gated on Agent B; favorites are device-local by approved scope |
+| 22 | Commuter signup/login/profile | READY_FOR_REVIEW hardening (PR #11); baseline merged | Request timeout, storage-failure truthfulness, revoked/concurrent session tests; 151 tests | Google sign-in gated on owner provider config; G5 deep links; device verification |
+| 23 | Landing/map/current location | DONE_AFTER_ACCEPTANCE baseline + READY_FOR_REVIEW hardening (PR #7) | Optional bounded pitch, hidden-tab lifecycle, location validation/cleanup; 152 tests | Device location verification; offline tiles blocked on provider-approved caching |
+| 24–28 | Route search/list/details/direction/line | DONE_AFTER_ACCEPTANCE baseline + READY_FOR_REVIEW hardening (PR #10) | Request cancellation, serialized pagination, de-duplication; 147 tests | Current real API unavailable during read-only attempt; populated approved dev data needed |
+| 29–35 | Live availability/movement/details/status | NOT_STARTED; test foundation READY_FOR_REVIEW (PR #9) | Contract-neutral clocks/animation/cancellation/synthetic fixtures/privacy tests; 149 tests | Approved Agent B public DTO, REST, Pusher, ordering/removal and reconciliation contracts |
+| 36 | Available count/favorites | Favorites DONE_AFTER_ACCEPTANCE (PR #6 merged); count NOT_STARTED; foundation PR #9 | Device-local favorites in main; privacy/test utilities only for future count consumer | Active jeepney count gated on Agent B; favorites remain device-local |
 | 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" gated form | Agent A G6 |
 
 ## Latest verification
 
 | Command / check | Environment | Result | Date/time | Evidence / notes |
 |---|---|---|---|---|
+| C1 PR #11: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:16 +08:00 | 16 files / 151 tests; 0 runtime vulnerabilities. New evidence is mocked Angular/native-storage regression coverage. |
+| C2 PR #7: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:20 +08:00 | 15 files / 152 tests; component coverage for pitch, reduced motion, hidden tabs, stale callbacks and geolocation cleanup; 0 runtime vulnerabilities. |
+| C3 PR #10: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:23 +08:00 | 15 files / 147 tests; 0 runtime vulnerabilities. Read-only `127.0.0.1:3000` health request was refused, so no new real-API result is claimed. |
+| C4 PR #8: web gates + `npx cap sync android` + Gradle `testDebugUnitTest lintDebug assembleDebug` | Windows; API 36; JBR 21.0.7; Gradle 8.14.3; AGP 8.13.0 | PASSED | 2026-10-22 12:12 +08:00 | 15 files / 144 web tests; Android unit/lint/debug build pass; APK 5,737,304 bytes, SHA-256 recorded in `ANDROID_BUILD_READINESS.md`; 0 runtime vulnerabilities. |
+| C5 PR #9: lint, typecheck, `npm test`, build, runtime audit, diff check | Isolated Windows worktree | PASSED | 2026-10-22 12:28 +08:00 | 16 files / 149 tests; explicitly synthetic fixtures; no runtime tracking feature or wire contract; 0 runtime vulnerabilities. |
+| Full dependency audit for PRs #7–#11 | Each package lockfile | 3 high, 3 moderate, 1 low (development tooling only) | 2026-10-22 | Angular CLI/MCP SDK, Vite launch-editor and Capacitor CLI/xcode/uuid chains; forced fixes change the major/tooling line. |
 | Codex PR #6 correction: `npm run lint`, `npm run typecheck`, `npm test` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:59 +08:00 | 15 files / 144 tests, including failed save/remove truthfulness, user-visible storage failure, and queue recovery. A mistargeted npm `--include` flag emitted a warning and Angular still ran the complete suite. |
 | Codex PR #6 correction: `npm run build`, `npm audit --omit=dev`, `git diff --check` | Local Windows, Node 22.17.1 | PASSED | 2026-10-22 09:57 +08:00 | Initial 640.99 kB raw / 170.28 kB transfer; 0 runtime vulnerabilities; no whitespace errors. |
 | Full `npm audit --json` | Local lockfile | 3 high, 3 moderate, 1 low (dev tooling only) | 2026-10-22 09:57 +08:00 | Angular CLI/MCP SDK, Vite launch-editor, and Capacitor CLI/xcode/uuid chains; available npm fixes change the major/tooling line or downgrade Capacitor CLI. Runtime audit is clean. |
@@ -69,21 +83,32 @@
 
 ## Shared contract / risk changes
 
-- API/DTO/schema/migration changes: None. Consumes the 14 merged `/api/auth/*` operations (Google sign-in not used) exactly as in `AGENT_A_OPENAPI_AUDIT.json`.
+- API/DTO/schema/migration changes: None. C1 consumes the merged Agent A authentication operations; C3 remains limited to public `q`, `page`, `pageSize`, list/detail contracts. C5 explicitly defines no wire format.
 - Auth/RBAC/data-isolation impact: Bearer tokens are attached only to requests flagged `REQUIRES_AUTH` (the `/auth/me*` calls), never to public route, tile or other-host requests. Registration always sends `role: "COMMUTER"`. The server remains authoritative.
-- Realtime/Traccar/geospatial impact: None.
+- Realtime/Traccar/geospatial impact: No realtime or Traccar implementation. C2 changes camera presentation and phone-location lifecycle only; C5 interpolation is bounded between already received endpoints and is not prediction.
 - Secrets/security/privacy impact: Access token memory-only. Refresh token in the iOS Keychain / Android Keystore via `capacitor-secure-storage-plugin@0.13.0` on native, memory-only in the browser (the plugin's web fallback is `localStorage`, which the Agent A handoff forbids). Refresh is single-flight. No credentials committed. Test values live only in untracked `.claude/test-accounts.local.env`.
 - Contract observations for the Tech Lead (not changes): (1) confirming an email change bumps `credentials_version` and revokes all sessions (`pg-identity-repository.ts:160-171`); the frontend handoff mentions this only for password changes. (2) Reusing a rotated refresh token revokes the whole token family.
-- Required Tech Lead or owner decision: Re-review PR #4; G5 mobile deep links for emailed links. The secure-storage plugin is provisionally accepted for development.
+- Required Tech Lead or owner decision: Review PRs #7–#11; G5 mobile deep links; Google OAuth client configuration; final Android application ID/signing/art; native API origin/CORS; provider-approved offline tile policy if that scope continues.
 
 ## Operator / hardware / external gates
 
-- Gate: Android build and physical-device verification (Keystore storage across restarts, sign-in, emailed links).
-- Required actor: Owner/operator with an Android SDK and device; needs an absolute `apiBaseUrl`, D2 (CORS `https://localhost`), and G5 for links to open the app.
-- Requested evidence: `npx cap add android`/`sync` output; restart-persistence check; device screenshots.
-- State: OWNER_VERIFICATION_PENDING (not attempted).
+- Gate: Android physical-device verification (install, foreground location permission, Keystore storage across restarts, sign-in, emailed links, real API reachability).
+- Required actor: Owner/operator with the device and approved environment; needs a confirmed app ID, release-signing decision, absolute native `apiBaseUrl`, matching CORS, and G5 for links to open the app.
+- Requested evidence: Install the PR #8 debug build or a later owner-approved build; record restart persistence, permission denial/allow, device screenshots, and sanitized API reachability. The local command-line sync/lint/unit/debug build is already evidenced.
+- State: OWNER_VERIFICATION_PENDING. No physical-device action was attempted or delegated.
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-22 12:29 +08:00 — Parallel commuter development packages submitted
+
+- Action / reason: Executed `VALRYDE-CODEX-C-PARALLEL-RELEASE-002` from merged main `131944f`, preserving PRs #1–#6 and separating five authorized packages into isolated worktrees/branches. Parallel helpers exhausted their execution allowance after leaving partial scoped diffs; Codex preserved and completed those diffs, corrected defects found during review, ran the full gates, pushed, and opened PRs #7–#11.
+- Checklist/issue: C1 ID 22; C2 ID 23; C3 IDs 24–28; C4 mandatory Android quality gate; C5 preparation only for IDs 29–35 and count portion of 36.
+- Files/config/services affected: PR #11 auth/session source/tests/docs; PR #7 map/location source/tests/docs; PR #10 route concurrency/tests/docs; PR #8 package manifests/native Android project/README/build docs plus shared status/handoff; PR #9 contract-neutral tracking utilities/tests/docs. No backend, infrastructure, database, production service, OAuth configuration or physical device changed.
+- Observed result (success/failure/rollback): Success. All five PRs are open and unmerged. C1–C3 and C5 source worktrees are clean after one commit each; C4 is clean after two source/docs commits plus this coordination update.
+- Validation and evidence: Every package passed lint, strict app/spec typecheck, complete regression tests, production build, `npm audit --omit=dev` (0), full audit recording, and `git diff --check`. Counts: C1 151, C2 152, C3 147, C4 144, C5 149. C4 additionally passed `npx cap sync android` and Gradle `testDebugUnitTest lintDebug assembleDebug`; APK hash is documented. C3's read-only local API attempt was refused, so no current real integration is claimed.
+- Contracts / risks / dependencies: No shared contract change. Offline tiles remain blocked. Google OAuth/deep links, native API environment, device evidence, Agent A G6, and Agent B consumer contracts remain external gates. Canonical mobile policy synchronization remains deferred because valryde-api PR #16 is still open.
+- Commit/PR link or SHA (if available): PR #7 `c2e33acc33a1d26847f1e5be0be5537f07f409b0`; PR #8 source `6554906a48f5662d93fece19629bdcb2e136ccc1`; PR #9 `c24e055a92c2e7729f89bd05a1e9ddb14fde68e9`; PR #10 `a03c01ec558a193ff3920003acb158ac50ef0f0d`; PR #11 `2d732f03bf0d8931f4b537f79a9b3c9bfca06f08`.
+- Next action / owner gate: Tech Lead reviews each PR without self-merge. Owner upgrades Android Studio to the supported Capacitor 8 minimum, confirms app identity/API/signing, and performs physical-device verification under the canonical policy once merged.
 
 ### 2026-10-22 10:01 +08:00 — PR #6 Codex final-review checkpoint
 
