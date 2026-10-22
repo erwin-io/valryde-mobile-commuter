@@ -1,7 +1,7 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { APP_CONFIG } from '../../core/app-config';
@@ -17,14 +17,25 @@ class FakeTransitMap {
   readonly userLocation = input<[number, number] | null>(null);
   readonly routeLine = input<unknown>(null);
   readonly bottomInset = input(0);
+  readonly userPanned = output<void>();
   focus = vi.fn();
 }
 
 describe('MapPage recenter', () => {
   async function setup(opts: { granted: boolean; result: LocationResult; alertRole?: string }) {
+    const watcher: {
+      onPosition?: (p: [number, number]) => void;
+      onError?: (r: LocationResult) => void;
+      stop: ReturnType<typeof vi.fn>;
+    } = { stop: vi.fn() };
     const location = {
       isGranted: vi.fn().mockResolvedValue(opts.granted),
       locate: vi.fn().mockResolvedValue(opts.result),
+      watch: vi.fn(async (onPosition: (p: [number, number]) => void, onError: (r: LocationResult) => void) => {
+        watcher.onPosition = onPosition;
+        watcher.onError = onError;
+        return watcher.stop;
+      }),
     };
     const alert = {
       present: vi.fn(),
@@ -54,7 +65,8 @@ describe('MapPage recenter', () => {
     fixture.autoDetectChanges();
     await fixture.whenStable();
     location.locate.mockClear();
-    return { fixture, page: fixture.componentInstance, location, alerts, toasts };
+    const map = () => fixture.debugElement.query(By.directive(FakeTransitMap)).componentInstance as FakeTransitMap;
+    return { fixture, page: fixture.componentInstance, location, alerts, toasts, watcher, map };
   }
 
   it('explains before prompting and does not locate when the user declines', async () => {
@@ -101,5 +113,104 @@ describe('MapPage recenter', () => {
     await page.recenter();
     expect(alerts.create).not.toHaveBeenCalled();
     expect(location.locate).toHaveBeenCalledOnce();
+  });
+
+  describe('follow mode', () => {
+    const located = { granted: true, result: { kind: 'located', position: [123.89, 10.31] } as LocationResult };
+
+    it('a launch-time locate with prior permission centers once but does not start following', async () => {
+      const { page, location } = await setup(located);
+      expect(page.following()).toBe(false);
+      expect(location.watch).not.toHaveBeenCalled();
+    });
+
+    it('an explicit tap follows position updates without changing the zoom', async () => {
+      const { page, watcher, map } = await setup(located);
+      await page.recenter();
+      expect(page.following()).toBe(true);
+      watcher.onPosition?.([123.9, 10.32]);
+      expect(page.userLocation()).toEqual([123.9, 10.32]);
+      expect(map().focus).toHaveBeenLastCalledWith([123.9, 10.32], true);
+    });
+
+    it('a second tap stops following and releases the GPS watch', async () => {
+      const { page, watcher } = await setup(located);
+      await page.recenter();
+      await page.recenter();
+      expect(page.following()).toBe(false);
+      expect(watcher.stop).toHaveBeenCalled();
+    });
+
+    it('panning the map by hand leaves follow mode', async () => {
+      const { page, watcher, map } = await setup(located);
+      await page.recenter();
+      map().userPanned.emit();
+      expect(page.following()).toBe(false);
+      expect(watcher.stop).toHaveBeenCalled();
+      map().focus.mockClear();
+      watcher.onPosition?.([123.95, 10.4]);
+      expect(map().focus).not.toHaveBeenCalled();
+    });
+
+    it('leaving the Map tab stops following', async () => {
+      const { page, watcher } = await setup(located);
+      await page.recenter();
+      page.ionViewDidLeave();
+      expect(page.following()).toBe(false);
+      expect(watcher.stop).toHaveBeenCalled();
+    });
+
+    it('permission revoked during follow stops following and explains the map still works', async () => {
+      const { page, watcher, toasts } = await setup(located);
+      await page.recenter();
+      watcher.onError?.({ kind: 'denied' });
+      expect(page.following()).toBe(false);
+      expect(toasts.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('The map still works') }),
+      );
+    });
+
+    it('exposes the follow state to assistive technology', async () => {
+      const { fixture, page } = await setup(located);
+      await page.recenter();
+      await fixture.whenStable();
+      // Ionic copies aria-* into the shadow button (what screen readers read) once; read it there when present.
+      const aria = (name: string) => {
+        const host = fixture.nativeElement.querySelector('ion-fab-button') as HTMLElement;
+        return host.shadowRoot?.querySelector('button')?.getAttribute(name) ?? host.getAttribute(name);
+      };
+      expect(aria('aria-pressed')).toBe('true');
+      expect(aria('aria-label')).toBe('Stop following my location');
+      await page.recenter();
+      await fixture.whenStable();
+      expect(aria('aria-pressed')).toBe('false');
+      expect(aria('aria-label')).toBe('Show and follow my location');
+    });
+  });
+
+  describe('route sheet across tabs', () => {
+    it('hides the sheet while another tab is shown and keeps the selection for when the user returns', async () => {
+      const { fixture, page } = await setup({ granted: false, result: { kind: 'denied' } });
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      (page as unknown as { selection: { state: { set(v: unknown): void } } }).selection.state.set({ status: 'loading' });
+      await fixture.whenStable();
+      const modal = fixture.nativeElement.querySelector('ion-modal') as HTMLElement & { isOpen: boolean };
+      expect(modal.isOpen).toBe(true);
+      // Ionic detaches change detection from a page as it leaves; the sheet must still close.
+      fixture.autoDetectChanges(false);
+      fixture.changeDetectorRef.detach();
+      page.ionViewWillLeave();
+      expect(modal.isOpen).toBe(false);
+      fixture.changeDetectorRef.reattach();
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      expect(page.active()).toBe(false);
+      page.closeRoute(); // didDismiss from the hide must not clear ?route=
+      expect(navigate).not.toHaveBeenCalled();
+      page.ionViewWillEnter();
+      expect(page.active()).toBe(true);
+      page.closeRoute(); // a real dismiss on the Map tab clears the selection
+      expect(navigate).toHaveBeenCalledWith([], { queryParams: { route: null, direction: null }, replaceUrl: true });
+    });
   });
 });

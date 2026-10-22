@@ -24,6 +24,8 @@ export class SessionService {
 
   readonly status = signal<SessionStatus>('restoring');
   readonly user = signal<AuthUser | null>(null);
+  /** True when the server ended the session (revoked/expired refresh token), not the user. */
+  readonly endedByServer = signal(false);
 
   private accessToken: string | null = null;
   private accessExpiresAt = 0;
@@ -78,7 +80,7 @@ export class SessionService {
 
   /** Ends the session on this device. Local state is cleared at once, whatever the network outcome. */
   async signOut(): Promise<void> {
-    this.invalidate();
+    this.invalidate(false);
     // Queued behind any pending write, so this reads (and revokes) the token that was actually stored.
     const token = await this.queue(async () => {
       const stored = await this.store.read();
@@ -94,14 +96,15 @@ export class SessionService {
   }
 
   /** Forget tokens locally, e.g. after a password change revoked every session server-side. */
-  async clearLocal(): Promise<void> {
-    this.invalidate();
+  async clearLocal(endedByServer = false): Promise<void> {
+    this.invalidate(endedByServer);
     await this.queue(() => this.store.clear());
   }
 
   /** Synchronously ends the current generation: later results from it are ignored. */
-  private invalidate(): void {
+  private invalidate(endedByServer: boolean): void {
     this.generation++;
+    this.endedByServer.set(endedByServer);
     this.rotation = undefined;
     this.accessToken = null;
     this.accessExpiresAt = 0;
@@ -123,7 +126,7 @@ export class SessionService {
       // 400/401/403: the refresh token is invalid, revoked or the account is blocked. Network errors,
       // 5xx and rate limits (429, or 500 under defect D1) keep the token so a later retry can succeed.
       const dead = error instanceof HttpErrorResponse && [400, 401, 403].includes(error.status);
-      if (dead && generation === this.generation) await this.clearLocal();
+      if (dead && generation === this.generation) await this.clearLocal(true);
       throw error;
     }
     await this.apply(bundle, generation);
@@ -141,6 +144,7 @@ export class SessionService {
     this.accessToken = bundle.accessToken;
     this.accessExpiresAt = Date.now() + bundle.accessTokenExpiresIn * 1000;
     this.user.set(bundle.user);
+    this.endedByServer.set(false);
     this.status.set('signed-in');
   }
 

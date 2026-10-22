@@ -63,6 +63,11 @@ import { displayNameValidators, trimmed } from './auth-form';
           />
         }
         @case ('signed-out') {
+          @if (session.endedByServer()) {
+            <ion-note class="message" role="alert">
+              Your session ended, for example after a password or email change on another device. Please sign in again.
+            </ion-note>
+          }
           <app-state-panel
             icon="person-circle-outline"
             title="Your VALRYDE account"

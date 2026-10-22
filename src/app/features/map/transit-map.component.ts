@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -111,6 +112,8 @@ export class TransitMapComponent {
   readonly routeLine = input<RouteLine | null>(null);
   /** Pixels hidden by overlays at the bottom (e.g. a sheet), used when fitting a route. */
   readonly bottomInset = input(0);
+  /** Emits when the user pans the map by gesture (used to leave follow mode). */
+  readonly userPanned = output<void>();
 
   readonly state = signal<MapState>('initializing');
 
@@ -150,9 +153,9 @@ export class TransitMapComponent {
   }
 
   /** Moves the camera only; no animation when the user prefers reduced motion. */
-  focus(position: LngLat): void {
+  focus(position: LngLat, keepZoom = false): void {
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    this.map?.easeTo({ center: position, zoom: 15, duration: reduceMotion ? 0 : 600 });
+    this.map?.easeTo({ center: position, ...(keepZoom ? {} : { zoom: 15 }), duration: reduceMotion ? 0 : 600 });
   }
 
   private init(): void {
@@ -197,6 +200,11 @@ export class TransitMapComponent {
         },
       });
       this.state.set('ready');
+    });
+
+    // Only gesture pans carry an originalEvent; programmatic easeTo/fitBounds do not.
+    map.on('dragstart', (event: { originalEvent?: unknown }) => {
+      if (event.originalEvent) this.userPanned.emit();
     });
 
     // Tile/glyph errors after load are recoverable by MapLibre; only a failed initial style is fatal.
@@ -251,12 +259,12 @@ export class TransitMapComponent {
     // A hidden or mid-transition tab has no usable size; MapLibre would silently skip the fit.
     if (clientHeight <= padding.top + padding.bottom || clientWidth <= padding.left + padding.right) return;
     this.fittedRouteId = line.id;
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    this.map.fitBounds(lineBounds(line.coordinates), {
-      padding,
-      maxZoom: 16,
-      duration: reduceMotion ? 0 : 600,
-    });
+    // The route can arrive before the ResizeObserver runs for a tab that just became visible; MapLibre
+    // still has the hidden (0×0) canvas size then, and fitBounds would silently do nothing.
+    this.map.resize();
+    // Jump, don't animate: MapLibre's resize() (fired by Ionic tab transitions) stops camera animations,
+    // and hidden or backgrounded WebViews pause animation frames, both of which left the fit abandoned.
+    this.map.fitBounds(lineBounds(line.coordinates), { padding, maxZoom: 16, duration: 0 });
   }
 
   private dispose(): void {

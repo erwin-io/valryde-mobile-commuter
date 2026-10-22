@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { MAP_FACTORY, RouteLine, TransitMapComponent } from './transit-map.component';
 
 class FakeMap {
-  handlers: Record<string, () => void> = {};
+  handlers: Record<string, (event?: unknown) => void> = {};
   removed = false;
   /** Last GeoJSON written to each source id. */
   data: Record<string, { features: unknown[] }> = {};
@@ -12,7 +12,7 @@ class FakeMap {
   addSource = vi.fn();
   addLayer = vi.fn();
   resize = vi.fn();
-  on(event: string, handler: () => void) {
+  on(event: string, handler: (event?: unknown) => void) {
     this.handlers[event] = handler;
     return this;
   }
@@ -22,8 +22,8 @@ class FakeMap {
   getSource(id: string) {
     return { setData: (d: { features: unknown[] }) => (this.data[id] = d) };
   }
-  emit(event: string) {
-    this.handlers[event]?.();
+  emit(event: string, payload?: unknown) {
+    this.handlers[event]?.(payload);
   }
 }
 
@@ -195,5 +195,44 @@ describe('TransitMapComponent', () => {
     const fixture = await render();
     fixture.destroy();
     expect(maps[0].removed).toBe(true);
+  });
+
+  it('reports gesture pans (for leaving follow mode) but not programmatic camera moves', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    const panned = vi.fn();
+    fixture.componentInstance.userPanned.subscribe(panned);
+    maps[0].emit('dragstart', {}); // easeTo/fitBounds: no originalEvent
+    expect(panned).not.toHaveBeenCalled();
+    maps[0].emit('dragstart', { originalEvent: new Event('touchstart') });
+    expect(panned).toHaveBeenCalledOnce();
+  });
+
+  it('follow updates keep the current zoom', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    fixture.componentInstance.focus([123.9, 10.3], true);
+    expect(maps[0].easeTo).toHaveBeenLastCalledWith(expect.not.objectContaining({ zoom: expect.anything() }));
+    fixture.componentInstance.focus([123.9, 10.3]);
+    expect(maps[0].easeTo).toHaveBeenLastCalledWith(expect.objectContaining({ zoom: 15 }));
+  });
+
+  it('fits without animation, so tab-transition resizes or paused frames cannot abandon the fit', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    fixture.componentRef.setInput('routeLine', line);
+    await fixture.whenStable();
+    expect(maps[0].fitBounds).toHaveBeenCalledOnce();
+    expect(maps[0].fitBounds.mock.calls[0][1].duration).toBe(0);
+  });
+
+  it('re-measures the map before fitting, so a tab that just became visible fits correctly', async () => {
+    const fixture = await render();
+    maps[0].emit('load');
+    maps[0].resize.mockClear();
+    fixture.componentRef.setInput('routeLine', line);
+    await fixture.whenStable();
+    expect(maps[0].resize).toHaveBeenCalled();
+    expect(maps[0].resize.mock.invocationCallOrder[0]).toBeLessThan(maps[0].fitBounds.mock.invocationCallOrder[0]);
   });
 });

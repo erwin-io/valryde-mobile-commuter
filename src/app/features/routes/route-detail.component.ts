@@ -19,12 +19,14 @@ import { ApiFailure, failureCopy } from '../../core/api-failure';
 import { StatePanelComponent } from '../../shared/state-panel.component';
 import { FavoritesService, MAX_FAVORITES } from '../favorites/favorites.service';
 import { RouteBadgeComponent } from './route-badge.component';
+import { savedAtLabel } from './route-cache.service';
 import { RouteDirection, TransitRoute } from './transit-routes.service';
 
 export type RouteDetailState =
   | { status: 'loading' }
   | { status: 'error'; failure: ApiFailure }
-  | { status: 'ready'; route: TransitRoute };
+  /** `savedAt` is set when the route comes from the offline cache instead of the API. */
+  | { status: 'ready'; route: TransitRoute; savedAt?: number };
 
 /** Bottom-sheet content for one route: identity, explicit direction choice and endpoints. No HTTP. */
 @Component({
@@ -96,6 +98,11 @@ export type RouteDetailState =
         }
         @case ('ready') {
           @if (route(); as r) {
+            @if (savedAt(); as at) {
+              <ion-note class="note offline" role="status">
+                You’re offline. Showing a copy saved {{ savedLabel(at) }}; it may be out of date.
+              </ion-note>
+            }
             @if (favoriteNotice(); as notice) {
               <ion-note class="note" role="status">{{ notice }}</ion-note>
             }
@@ -171,6 +178,9 @@ export type RouteDetailState =
       font-weight: 600;
       white-space: normal;
     }
+    .offline {
+      color: var(--valryde-warning);
+    }
     .note {
       display: block;
       margin: 8px 16px 16px;
@@ -203,6 +213,11 @@ export class RouteDetailComponent {
   protected readonly route = computed(() => {
     const s = this.state();
     return s.status === 'ready' ? s.route : null;
+  });
+  protected readonly savedLabel = savedAtLabel;
+  protected readonly savedAt = computed(() => {
+    const s = this.state();
+    return s.status === 'ready' ? (s.savedAt ?? null) : null;
   });
   private readonly favorites = inject(FavoritesService);
   protected readonly favoriteNotice = signal<string | null>(null);

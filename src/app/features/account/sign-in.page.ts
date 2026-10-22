@@ -132,8 +132,10 @@ export class SignInPage {
       this.form.reset();
       await this.router.navigate(['/tabs/account'], { replaceUrl: true });
     } catch (error) {
-      this.unverified.set(apiErrorCode(error) === 'EMAIL_NOT_VERIFIED');
-      this.error.set(authErrorMessage(error));
+      const code = apiErrorCode(error);
+      this.unverified.set(code === 'EMAIL_NOT_VERIFIED');
+      // On login, Agent A returns 403 FORBIDDEN only when the account is not ACTIVE.
+      this.error.set(code === 'FORBIDDEN' ? 'This account is disabled and can’t sign in.' : authErrorMessage(error));
     } finally {
       this.busy.set(false);
     }
