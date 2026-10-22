@@ -5,7 +5,7 @@
 - Updated at (ISO 8601, Asia/Singapore): 2026-10-23T02:58:17+08:00.
 - Agent / module: C — Commuter Mobile, Codex emergency takeover `VALRYDE-CODEX-UI-EMERGENCY-TAKEOVER-002`.
 - Repository / workspace: `erwin-io/valryde-mobile-commuter`, `.codex-worktrees/agent-c` inside the assigned commuter repository.
-- Branch / base: `codex/37-destination-discovery` from `origin/main` `e0fa549`; source HEAD supplied in PR/report.
+- Branch / base: `codex/37-destination-discovery` from `origin/main` `e0fa549`; source HEAD `570bb1b8e4f76cdbdc25e463c67c5045b647b9f2`, PR #13; this status follow-up does not change tested source.
 - Repository status: Original checkout and six earlier linked worktrees preserved clean; no stashes or unpushed commits discovered. PRs #1–#12 merged; no commuter PR was open at recovery.
 - Checklist IDs: 22–37. Existing 22–28 and Favorites implementation reused; ID 37 implemented against merged API G6 PR #28.
 - Implementation progress: READY_FOR_REVIEW — ID 37 implementation, browser flow and feasible Android checks pass; live development API unavailable. Tech Lead decision on this package: Not reviewed.
@@ -97,6 +97,11 @@
 - State: OWNER_VERIFICATION_PENDING. No physical-device action was attempted or delegated.
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-23 03:00 +08:00 — ID 37 PR submitted
+- Committed/pushed source `570bb1b8e4f76cdbdc25e463c67c5045b647b9f2`; opened https://github.com/erwin-io/valryde-mobile-commuter/pull/13 against main. No merge/deploy. Development evidence is reproducible; real G6/provider/device gates remain explicit.
+- Separate tracking worktree `.codex-worktrees/agent-c-tracking`, branch `codex/29-36-tracking-ui-adapter`, started from main under rapid directive. Internal normalized adapter only; no Agent B API contract invented.
+
 
 ### 2026-10-23 +08:00 — ID 37 final development validation
 - Final source: lint/typecheck, 19 files / 187 tests, production build 642.26 kB, runtime audit zero and diff check pass. Browser flow passes at 390×844 and 320×568; screenshots inspected. Form submit is intercepted and provider attribution remains visible after place selection.
