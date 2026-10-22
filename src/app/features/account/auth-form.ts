@@ -22,6 +22,11 @@ export function matching(field: string, confirm: string): ValidatorFn {
     group.get(field)?.value === group.get(confirm)?.value ? null : { mismatch: true };
 }
 
+/** Emailed challenge tokens are 20–512 characters (Agent A contract); anything else is a damaged link. */
+export function isPlausibleToken(token: string | undefined | null): token is string {
+  return typeof token === 'string' && token.length >= 20 && token.length <= 512;
+}
+
 /** Trimmed string values; passwords are left untouched. */
 export function trimmed(value: string): string {
   return value.trim();

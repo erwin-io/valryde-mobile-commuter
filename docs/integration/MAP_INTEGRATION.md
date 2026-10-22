@@ -50,3 +50,11 @@ Request foreground location only after contextual explanation or explicit recent
 - **Geometry gate:** `drawableCoordinates()` accepts only a `LineString` with at least 2 finite positions within ±180/±90. Anything else is not drawn and the sheet says the line can't be shown.
 - **Fit-to-route:** runs once per direction id, with padding for the search bar (top) and the sheet at its initial 0.5 breakpoint (bottom). It is deferred until the map container is large enough, because a route chosen from the Routes tab arrives while the map tab is hidden; the existing `ResizeObserver` retries it.
 - **Selection state:** `?route=<id>&direction=<id>` query parameters drive `RouteSelectionService`, so selections are deep-linkable and back-navigable; closing the sheet clears them.
+
+## Follow mode, camera and offline (independent UI batch)
+
+- **Fit-to-route jumps** (duration 0). MapLibre's `resize()`, triggered by Ionic tab transitions, calls `stop()` and abandoned animated fits; hidden or backgrounded WebViews also pause animation frames.
+- **Follow mode** starts only from an explicit recenter tap: foreground `watchPosition` updates move the dot and camera (keeping zoom). It ends when the user pans by gesture (`dragstart` with `originalEvent`), taps again, leaves the Map tab, selects a route, or permission is revoked. The watch is always cleared. The position stays on the device.
+- **Route sheet** is presented only while the Map tab is the active Ionic page; a hide for a tab change keeps the selection.
+- **Admin color**: `#RRGGBB` only; anything else renders in neutral `#5E6B65` and is never passed to CSS or MapLibre.
+- **Offline route data**: see `RouteCacheService`: unfiltered first list page and up to 25 route details, 3-day expiry, 1.5 M-char cap with oldest-first eviction, removal on 404/400, used only when the network fails and always labelled with its save time. No offline search or routing.

@@ -1,8 +1,9 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap, timeout } from 'rxjs';
 import { APP_CONFIG } from '../../core/app-config';
 import { LngLat } from '../map/location.service';
+import { RouteCacheService } from './route-cache.service';
 
 // DTOs mirror Agent A's merged OpenAPI (valryde-api docs/integration/AGENT_A_OPENAPI_AUDIT.json).
 export type TransitStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
@@ -45,11 +46,15 @@ export interface TransitRoutePage {
   pagination: Pagination;
 }
 
+/** Slow mobile networks fail into the offline path instead of spinning indefinitely. */
+export const ROUTE_REQUEST_TIMEOUT_MS = 15_000;
+
 /** Public, unauthenticated Agent A transit-route endpoints (active routes and directions only). */
 @Injectable({ providedIn: 'root' })
 export class TransitRoutesService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${inject(APP_CONFIG).apiBaseUrl}/transit-routes`;
+  private readonly cache = inject(RouteCacheService);
 
   list(query: { q?: string; page?: number; pageSize?: number }): Observable<TransitRoutePage> {
     let params = new HttpParams();
@@ -58,12 +63,25 @@ export class TransitRoutesService {
     if (q) params = params.set('q', q);
     if (query.page) params = params.set('page', query.page);
     if (query.pageSize) params = params.set('pageSize', query.pageSize);
-    return this.http.get<TransitRoutePage>(this.baseUrl, { params });
+    const cacheable = !q && (query.page ?? 1) === 1;
+    return this.http.get<TransitRoutePage>(this.baseUrl, { params }).pipe(
+      timeout(ROUTE_REQUEST_TIMEOUT_MS),
+      tap((page) => cacheable && this.cache.saveList(page)),
+    );
   }
 
   get(routeId: string): Observable<TransitRoute> {
     return this.http
       .get<{ route: TransitRoute }>(`${this.baseUrl}/${encodeURIComponent(routeId)}`)
-      .pipe(map((body) => body.route));
+      .pipe(
+        timeout(ROUTE_REQUEST_TIMEOUT_MS),
+        map((body) => body.route),
+        tap({
+          next: (route) => this.cache.saveDetail(route),
+          // Deleted, deactivated (no longer public) or malformed id: drop any saved copy.
+          error: (error) =>
+            error instanceof HttpErrorResponse && [400, 404].includes(error.status) && this.cache.removeDetail(routeId),
+        }),
+      );
   }
 }

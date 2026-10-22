@@ -4,13 +4,15 @@ import { Subscription } from 'rxjs';
 import { toApiFailure } from '../../core/api-failure';
 import { RouteLine } from '../map/transit-map.component';
 import { RouteDetailState } from './route-detail.component';
-import { drawableCoordinates } from './route-geometry';
+import { RouteCacheService } from './route-cache.service';
+import { drawableCoordinates, routeColor } from './route-geometry';
 import { TransitRoutesService } from './transit-routes.service';
 
 /** Page-scoped state for the route shown over the map: detail request, chosen direction, drawable line. */
 @Injectable()
 export class RouteSelectionService {
   private readonly routes = inject(TransitRoutesService);
+  private readonly cache = inject(RouteCacheService);
   private request?: Subscription;
   private routeId: string | null = null;
 
@@ -30,7 +32,7 @@ export class RouteSelectionService {
     const direction = this.direction();
     if (s?.status !== 'ready' || !direction) return null;
     const coordinates = drawableCoordinates(direction.geometry);
-    return coordinates ? { id: direction.id, coordinates, color: s.route.routeColorHex } : null;
+    return coordinates ? { id: direction.id, coordinates, color: routeColor(s.route.routeColorHex) } : null;
   });
 
   select(routeId: string | null, directionId: string | null): void {
@@ -49,7 +51,11 @@ export class RouteSelectionService {
         const failure = toApiFailure(error);
         // The route id is the only input, so a 400 (e.g. a malformed deep link) means "no such route".
         if (error instanceof HttpErrorResponse && error.status === 400) failure.kind = 'not-found';
-        this.state.set({ status: 'error', failure });
+        // Offline or timed out: fall back to an unexpired saved copy, clearly labelled as such.
+        const saved = failure.kind === 'network' ? this.cache.detail(routeId) : null;
+        this.state.set(
+          saved ? { status: 'ready', route: saved.value, savedAt: saved.savedAt } : { status: 'error', failure },
+        );
       },
     });
   }

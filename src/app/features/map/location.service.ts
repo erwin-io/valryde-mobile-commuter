@@ -9,7 +9,7 @@ export type LocationResult =
   | { kind: 'unavailable' };
 
 export const GEOLOCATION = new InjectionToken<
-  Pick<typeof Geolocation, 'getCurrentPosition' | 'checkPermissions'>
+  Pick<typeof Geolocation, 'getCurrentPosition' | 'checkPermissions' | 'watchPosition' | 'clearWatch'>
 >('GEOLOCATION', { providedIn: 'root', factory: () => Geolocation });
 
 /** Foreground, on-device location for map context only. The position is never transmitted. */
@@ -38,6 +38,34 @@ export class LocationService {
     } catch {
       return (await this.isDenied()) ? { kind: 'denied' } : { kind: 'unavailable' };
     }
+  }
+
+  /**
+   * Foreground position updates for follow mode. Returns a stop function; call it whenever following
+   * ends so the GPS is not kept running. `onError` reports a denied or failed watch once, then stops.
+   */
+  async watch(onPosition: (position: LngLat) => void, onError: (result: LocationResult) => void): Promise<() => void> {
+    let stopped = false;
+    let id: string | undefined;
+    const stop = () => {
+      stopped = true;
+      if (id !== undefined) void this.geolocation.clearWatch({ id }).catch(() => undefined);
+    };
+    try {
+      id = await this.geolocation.watchPosition({ enableHighAccuracy: true, timeout: 15_000, maximumAge: 5_000 }, (position, error) => {
+        if (stopped) return;
+        if (position) onPosition([position.coords.longitude, position.coords.latitude]);
+        else if (error) {
+          stop();
+          void this.isDenied().then((denied) => onError(denied ? { kind: 'denied' } : { kind: 'unavailable' }));
+        }
+      });
+      if (stopped) stop(); // stop() was called before the watch id arrived
+    } catch {
+      stop();
+      onError((await this.isDenied()) ? { kind: 'denied' } : { kind: 'unavailable' });
+    }
+    return stop;
   }
 
   private async isDenied(): Promise<boolean> {

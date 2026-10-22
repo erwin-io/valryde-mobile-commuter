@@ -19,6 +19,16 @@ export function drawableCoordinates(geometry: RouteDirection['geometry'] | null 
   return valid ? coordinates.map((p) => [p[0], p[1]] as LngLat) : null;
 }
 
+const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+
+/** Neutral stand-in when the Admin route color is malformed; never presented as the official color. */
+export const FALLBACK_ROUTE_COLOR = '#5E6B65';
+
+/** The Admin-defined route color when it matches the contract (`#RRGGBB`), otherwise the neutral fallback. */
+export function routeColor(hex: unknown): string {
+  return typeof hex === 'string' && HEX_COLOR.test(hex) ? hex : FALLBACK_ROUTE_COLOR;
+}
+
 /** Black or white text for a route-color badge, by WCAG relative luminance. */
 export function badgeTextColor(hex: string): '#000000' | '#FFFFFF' {
   const channels = [1, 3, 5].map((i) => {

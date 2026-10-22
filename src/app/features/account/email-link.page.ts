@@ -11,6 +11,7 @@ import { AuthApiService, AuthUser } from '../../core/auth/auth-api.service';
 import { authErrorMessage } from '../../core/auth/auth-errors';
 import { SessionService } from '../../core/auth/session.service';
 import { StatePanelComponent } from '../../shared/state-panel.component';
+import { isPlausibleToken } from './auth-form';
 
 export type EmailLinkKind = 'verify-email' | 'confirm-email-change';
 
@@ -46,7 +47,12 @@ export type EmailLinkKind = 'verify-email' | 'confirm-email-change';
         }
         @case ('failed') {
           <app-state-panel icon="alert-circle-outline" title="This link didn’t work" [body]="error() ?? ''" />
-          <ion-button class="action" expand="block" routerLink="/tabs/account">Go to account</ion-button>
+          @if (kind() === 'verify-email') {
+            <ion-button class="action" expand="block" routerLink="/tabs/account/resend-verification">
+              Send a new verification email
+            </ion-button>
+          }
+          <ion-button class="action" expand="block" fill="outline" routerLink="/tabs/account">Go to account</ion-button>
         }
       }
     </ion-content>
@@ -82,8 +88,9 @@ export class EmailLinkPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const token = this.token();
-    if (!token) {
-      this.error.set('The link is incomplete. Open it again from your email.');
+    // Rejected locally: a truncated or damaged link is never sent to the API.
+    if (!isPlausibleToken(token)) {
+      this.error.set('The link is incomplete or damaged. Open it again from your email.');
       this.state.set('failed');
       return;
     }

@@ -18,7 +18,7 @@ import { AuthApiService } from '../../core/auth/auth-api.service';
 import { authErrorMessage } from '../../core/auth/auth-errors';
 import { SessionService } from '../../core/auth/session.service';
 import { StatePanelComponent } from '../../shared/state-panel.component';
-import { PASSWORD_ERROR, matching, passwordValidators } from './auth-form';
+import { PASSWORD_ERROR, isPlausibleToken, matching, passwordValidators } from './auth-form';
 
 export type PasswordPageKind = 'reset' | 'change';
 
@@ -154,7 +154,7 @@ export class PasswordPage {
     { validators: matching('password', 'confirm') },
   );
   protected readonly passwordError = PASSWORD_ERROR;
-  protected readonly missingToken = computed(() => this.kind() === 'reset' && !this.token());
+  protected readonly missingToken = computed(() => this.kind() === 'reset' && !isPlausibleToken(this.token()));
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly done = signal(false);

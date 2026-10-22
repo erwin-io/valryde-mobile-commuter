@@ -1,10 +1,10 @@
 import { Component, computed, input } from '@angular/core';
-import { badgeTextColor } from './route-geometry';
+import { badgeTextColor, routeColor } from './route-geometry';
 
 /** Route code on the Admin-defined route color; color is never the only cue (the code is always shown). */
 @Component({
   selector: 'app-route-badge',
-  template: `<span class="badge" [style.background]="color()" [style.color]="textColor()">{{ code() }}</span>`,
+  template: `<span class="badge" [style.background]="background()" [style.color]="textColor()">{{ code() }}</span>`,
   styles: `
     .badge {
       display: inline-block;
@@ -23,5 +23,6 @@ import { badgeTextColor } from './route-geometry';
 export class RouteBadgeComponent {
   readonly code = input.required<string>();
   readonly color = input.required<string>();
-  protected readonly textColor = computed(() => badgeTextColor(this.color()));
+  protected readonly background = computed(() => routeColor(this.color()));
+  protected readonly textColor = computed(() => badgeTextColor(this.background()));
 }
