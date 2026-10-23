@@ -2,19 +2,27 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Singapore): 2026-10-23T02:58:17+08:00.
+- Updated at (ISO 8601, Asia/Singapore): 2026-10-23T11:08:00+08:00.
 - Agent / module: C — Commuter Mobile, Codex emergency takeover `VALRYDE-CODEX-UI-EMERGENCY-TAKEOVER-002`.
 - Repository / workspace: `erwin-io/valryde-mobile-commuter`, `.codex-worktrees/agent-c` inside the assigned commuter repository.
-- Branch / base: `codex/37-destination-discovery` from `origin/main` `e0fa549`; source HEAD `570bb1b8e4f76cdbdc25e463c67c5045b647b9f2`, PR #13; this status follow-up does not change tested source.
+- Branch / base: `codex/37-destination-discovery` from `origin/main` `e0fa549`; PR #13. Rapid Delivery 004 adds real backend/browser acceptance, a secure interactive fixture runner, and an offline reconnect correction on this branch; final follow-up HEAD is recorded after commit.
 - Repository status: Original checkout and six earlier linked worktrees preserved clean; no stashes or unpushed commits discovered. PRs #1–#12 merged; no commuter PR was open at recovery.
 - Checklist IDs: 22–37. Existing 22–28 and Favorites implementation reused; ID 37 implemented against merged API G6 PR #28.
-- Implementation progress: READY_FOR_REVIEW — ID 37 implementation, browser flow and feasible Android checks pass; live development API unavailable. Tech Lead decision on this package: Not reviewed.
-- Last confirmed result: Lint, app/spec typecheck, 19 test files / 187 tests, production build (642.26 kB initial), runtime audit zero, diff check passed.
+- Implementation progress: READY_FOR_REVIEW — ID 37 implementation and public G6/browser acceptance pass against the local isolated backend; authenticated acceptance awaits operator entry of the approved fixture password. IDs 22/23/37 retain external/device gates. Tech Lead decision on this package: Not reviewed.
+- Last confirmed result: Lint, app/spec typecheck, 19 test files / 189 tests, production build (642.18 kB initial), 12 real backend/browser checks, runtime audit zero, diff check passed. Authenticated checks are CREDENTIALS_NOT_CONFIGURED, neither passed nor failed.
 - Validation failures: First browser harness targeted an Ionic label instead of its segment button; corrected selector. First Capacitor sync failed because the original checkout dependency junction lacked `@capacitor/android`; resulting Gradle build failed on an ungenerated Cordova variables file. Exact npm ci resolved dependencies; Capacitor sync and native checks pass. Browser submit and retained attribution regressions were corrected; history below records failed runs.
 - Dependencies: API main `810c8a13356ddbf0e28a4faf5ad7f86ce0a30479`; authenticated normalized place search/public direct discovery. Provider disabled by default; real provider, fixture credentials, native links/origin, Google OAuth, release identity/signing and owner device verification remain external.
-- Next concrete action: Submit focused ID 37 PR to Agent G; advance tracking UI in separate branch under VALRYDE-C-RAPID-DELIVERY-003. Do not self-merge or deploy.
+- Next concrete action: Enter the fixture password in the approved local PowerShell launcher, then review authenticated results and external native/provider gates; keep PR #14 unchanged. Do not self-merge or deploy.
 - IDs 29–35 and count 36: BLOCKED on approved public snapshot, DTO and realtime consumer contracts; no vehicle endpoint/channel invented.
 - Governance: Shared reporting policy 1.2; canonical approved mobile testing policy inspected at API main (`docs/governance/VALRYDE_MOBILE_TESTING_POLICY_001.md`). Owner physical acceptance not claimed.
+
+## Rapid Delivery 004 and credential handoff — `VALRYDE-C-SEC-001`
+
+- The existing merged backend at `810c8a13356ddbf0e28a4faf5ad7f86ce0a30479` answered health 200/database ok, public seeded route list/detail 200, direct discovery 200 for forward and empty paths, validation 400, and unauthenticated place search 401. The Tech Lead attests `valryde_ui_dev`; the health response does not identify its database by name.
+- PR #13 now carries `scripts/verify-real-backend.cjs` and `scripts/Invoke-CommuterAcceptance.ps1`. The latter prompts with `Read-Host -AsSecureString`, supplies the fixture password only to its Node child environment and removes launcher credential variables promptly. Authenticated login/profile, place search, browser flow, refresh rotation, logout, replay race and bounded rate-limit checks are prepared but not executed because the password has not been entered locally. No secret file or unrelated credential store was consulted.
+- Real Chrome at 390×844 and 320×568 used the production bundle, actual backend and OpenFreeMap without request or provider mocks. Twelve checks passed, zero failed. A first expanded run exposed stale saved route details after reconnect (8 passed, 1 failed). `RouteSelectionService` now retries on an offline-to-online transition; two new regression tests verify reconciliation and no retry loop when the API remains down. The final expanded run passed all 12 checks. Evidence: `docs/testing/RAPID_DELIVERY_004.md` and `docs/testing/evidence/rapid-004/`.
+- Final gates: lint, typecheck, 19 files/189 tests, production build 642.18 kB initial, runtime audit zero, diff check pass. Final Capacitor sync and Gradle `test lintDebug assembleDebug` passed (381 tasks; APK SHA-256 `5F1F1776A700A9564FBA753B0D8BD31A6594484994A2FF7F673B313F34ADEA3C`). `adb devices` showed no target. Automatic approval review rejected a headless AVD launch as `blocked by policy`; no alternate launch was attempted.
+- No checklist ID is newly Completed-ready: 22 needs fixture authentication, inbox/link/Google and device evidence; 23 needs native runtime and approved tile rights; 37 needs authenticated place response/provider state and complete device destination flow. PR #14 remains tracking-ready only, without an Agent B public gateway.
 ## Codex temporary-execution takeover — `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`
 
 - Recovery checkpoint: `AGENT_C_CODEX_TAKEOVER_READY` completed; PR checkpoint `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` completed.
@@ -97,6 +105,37 @@
 - State: OWNER_VERIFICATION_PENDING. No physical-device action was attempted or delegated.
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-23T11:04:29+08:00 — Offline reconciliation corrected with before/after regression evidence
+- Before fix: full suite 187 passed / 2 new failures (189 total), both expecting a second detail request after reconnect. Preserved public browser failure evidence separately.
+- Correction: RouteSelectionService retries a saved route once on an actual offline-to-online transition, preserves explicit direction, and reads request state untracked to prevent retry loops if the API is still unreachable.
+- Targeted command node node_modules/@angular/cli/bin/ng.js test --watch=false --include=src/app/features/routes/route-selection.service.spec.ts passes 1 file / 9 tests. Full lint/typecheck/189-test/build and expanded real browser recovery verification underway.
+- Re-ran feasible native checks before this source correction: cap sync and Gradle test/lintDebug/assembleDebug passed; updated-source bundle will be synchronized/rebuilt after web validation. No native runtime acceptance claimed.
+- Authenticated runner prepared and secure launcher syntax validated, but no approved process credential is present; status CREDENTIALS_NOT_CONFIGURED. No password/token files or logs created.
+
+
+### 2026-10-23T11:02:23+08:00 — Real offline recovery defect reproduced
+- Expanded no-mock Chrome acceptance: public API/route/provider map plus actual browser permission denial and pitch passed at 390px. Network-offline cached metadata test failed at reconnect: saved route state does not reconcile after browser online returns. Preserved sanitized failing public evidence in BEFORE_FIX-offline-reconnect-results.json.
+- Added two regression cases: reconnect cached detail while preserving direction; prevent repeated retries if browser is online but API remains unreachable. Running before correction to establish failure evidence. The npm include flag was consumed as npm configuration (warning); the command runs the full suite, not a targeted subset.
+- C-SEC-001 launcher syntax passes; no credential variable names present in this process. Authenticated tests remain CREDENTIALS_NOT_CONFIGURED. No unrelated environment/secret files read; PR #14 unchanged.
+
+
+### 2026-10-23T10:56:38+08:00 — C-SEC-001 secure launcher and real public acceptance
+- Credential source clarified: interactive local PowerShell only, fixed seeded commuter account; no persistent file/vault lookup. Added Read-Host -AsSecureString launcher with child-only environment, BSTR cleanup and credential environment removal. PowerShell parser reports zero syntax errors. No password supplied or requested in chat; authenticated execution CREDENTIALS_NOT_CONFIGURED, not passed/failed.
+- Added no-mock real backend/browser acceptance runner: eight initial checks pass (health, actual route/list/detail, place 401 boundary, direct matching/empty/invalid, real map/provider at 390/320). Actual provider screenshots inspected. No service/provider stubs used.
+- Prepared authenticated checks for normal profile/G6/browser/session flows and bounded optional rate-limit validation; no authenticated results claimed before operator provision. Approved inbox/provider mode still not supplied.
+- Attempted headless/read-only Android AVD launch after memory recovered; automatic approval review rejected the launch with only 'blocked by policy'. Did not retry via alternate route. Native runtime remains NOT_RUN; existing build-only evidence is separate.
+- PR #14 unchanged. Running all independent PR #13 lint/typecheck/unit/build/public-live checks and feasible native compilation; item matrix in docs/testing/RAPID_DELIVERY_004.md.
+
+
+### 2026-10-23T10:48:42+08:00 — Rapid Delivery 004 environment recovery and live connectivity
+- Directive VALRYDE-C-RAPID-DELIVERY-004: prioritize 22/23/37, preserve PR #13/#14, real fixture acceptance without mocks, no backend edits/merges/deploys.
+- PR #13 head a4b419f56534cf64e0d2b94ef1c6c89b8d22d6a3 and PR #14 head d31ad98d4b557a40312a026744f3c06b9cfcf6b2 remain open/mergeable with GitGuardian SUCCESS and no reviews. Working tree clean at recovery; histories preserved.
+- Actual GET /api/health now returns 200 with status/database ok at both 127.0.0.1:3000 and localhost:3000. GET /api/transit-routes returns two seeded ACTIVE routes. Unauthenticated GET /api/places/search returns 401 AUTH_REQUIRED. API main still 810c8a13356ddbf0e28a4faf5ad7f86ce0a30479.
+- No fixture/credential environment variable names present. Requested approved external secret source, without asking for credential values in chat. Authenticated acceptance remains pending provision; no guessed credentials.
+- adb has no attached targets; free physical memory 1,127,280 KiB of 16,454,352 KiB at inspection. Emulator startup under this load is not practical; physical-device access not present. Native Google OAuth, native HTTPS links, approved offline tile permissions and device acceptance remain gates.
+- Next: independently validate PR #13 with real public API and browser route/discovery flows; authenticate only after secure fixture source is supplied. Keep PR #14 tracking-ready, with no wire adapter changes.
+
 
 ### 2026-10-23 03:00 +08:00 — ID 37 PR submitted
 - Committed/pushed source `570bb1b8e4f76cdbdc25e463c67c5045b647b9f2`; opened https://github.com/erwin-io/valryde-mobile-commuter/pull/13 against main. No merge/deploy. Development evidence is reproducible; real G6/provider/device gates remain explicit.

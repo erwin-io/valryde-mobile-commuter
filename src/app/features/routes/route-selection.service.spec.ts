@@ -1,6 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
+import { ConnectivityService } from '../../core/connectivity.service';
+import { RouteCacheService } from './route-cache.service';
 import { RouteSelectionService } from './route-selection.service';
 import { direction, transitRoute } from './test-fixtures';
 import { TransitRoute, TransitRoutesService } from './transit-routes.service';
@@ -9,16 +12,22 @@ describe('RouteSelectionService', () => {
   let responses: Subject<TransitRoute>[];
   let selection: RouteSelectionService;
   const get = vi.fn();
+  const online = signal(true);
 
   beforeEach(() => {
     responses = [];
+    online.set(true);
     get.mockReset().mockImplementation(() => {
       const s = new Subject<TransitRoute>();
       responses.push(s);
       return s;
     });
     TestBed.configureTestingModule({
-      providers: [RouteSelectionService, { provide: TransitRoutesService, useValue: { get } }],
+      providers: [
+        RouteSelectionService,
+        { provide: TransitRoutesService, useValue: { get } },
+        { provide: ConnectivityService, useValue: { online } },
+      ],
     });
     selection = TestBed.inject(RouteSelectionService);
   });
@@ -26,8 +35,49 @@ describe('RouteSelectionService', () => {
   const twoWay = transitRoute({
     directions: [
       direction({ id: 'out', directionLabel: 'Outbound' }),
-      direction({ id: 'in', directionLabel: 'Inbound', originName: 'IT Park', destinationName: 'Carbon Market' }),
+      direction({
+        id: 'in',
+        directionLabel: 'Inbound',
+        originName: 'IT Park',
+        destinationName: 'Carbon Market',
+      }),
     ],
+  });
+
+  it('reconciles an offline saved detail on reconnect and preserves the selected direction', () => {
+    vi.spyOn(TestBed.inject(RouteCacheService), 'detail').mockReturnValue({
+      value: twoWay,
+      savedAt: 123,
+    });
+    online.set(false);
+    TestBed.tick();
+    selection.select('route-1', 'in');
+    responses[0].error(new HttpErrorResponse({ status: 0 }));
+    expect(selection.state()).toMatchObject({ status: 'ready', savedAt: 123 });
+    online.set(true);
+    TestBed.tick();
+    expect(get).toHaveBeenCalledTimes(2);
+    responses[1].next(twoWay);
+    expect(selection.state()).toEqual({ status: 'ready', route: twoWay });
+    expect(selection.direction()?.id).toBe('in');
+  });
+
+  it('does not loop while the browser is online but the API is unreachable', () => {
+    vi.spyOn(TestBed.inject(RouteCacheService), 'detail').mockReturnValue({
+      value: twoWay,
+      savedAt: 123,
+    });
+    online.set(false);
+    TestBed.tick();
+    selection.select('route-1', 'in');
+    responses[0].error(new HttpErrorResponse({ status: 0 }));
+    online.set(true);
+    TestBed.tick();
+    expect(get).toHaveBeenCalledTimes(2);
+    responses[1].error(new HttpErrorResponse({ status: 0 }));
+    TestBed.tick();
+    expect(get).toHaveBeenCalledTimes(2);
+    expect(selection.state()).toMatchObject({ status: 'ready', savedAt: 123 });
   });
 
   it('loads the route, defaults to the first direction and builds a colored line', () => {
@@ -56,7 +106,9 @@ describe('RouteSelectionService', () => {
   it('reports no line for geometry the map must not draw', () => {
     selection.select('route-1', null);
     responses[0].next(
-      transitRoute({ directions: [direction({ geometry: { type: 'LineString', coordinates: [[1, 2]] } })] }),
+      transitRoute({
+        directions: [direction({ geometry: { type: 'LineString', coordinates: [[1, 2]] } })],
+      }),
     );
     expect(selection.direction()).not.toBeNull();
     expect(selection.line()).toBeNull();
@@ -65,7 +117,10 @@ describe('RouteSelectionService', () => {
   it('maps errors, retries the same route, and clears on deselect', () => {
     selection.select('route-1', null);
     responses[0].error(new HttpErrorResponse({ status: 404 }));
-    expect(selection.state()).toEqual({ status: 'error', failure: { kind: 'not-found', requestId: undefined } });
+    expect(selection.state()).toEqual({
+      status: 'error',
+      failure: { kind: 'not-found', requestId: undefined },
+    });
 
     selection.retry();
     expect(get).toHaveBeenLastCalledWith('route-1');
@@ -78,8 +133,16 @@ describe('RouteSelectionService', () => {
 
   it('treats a rejected route id (400, e.g. a malformed deep link) as not found', () => {
     selection.select('not-a-uuid', null);
-    responses[0].error(new HttpErrorResponse({ status: 400, error: { error: { code: 'VALIDATION_ERROR', requestId: 'r1' } } }));
-    expect(selection.state()).toEqual({ status: 'error', failure: { kind: 'not-found', requestId: 'r1' } });
+    responses[0].error(
+      new HttpErrorResponse({
+        status: 400,
+        error: { error: { code: 'VALIDATION_ERROR', requestId: 'r1' } },
+      }),
+    );
+    expect(selection.state()).toEqual({
+      status: 'error',
+      failure: { kind: 'not-found', requestId: 'r1' },
+    });
   });
 
   it('ignores a slow response for a route the user already left', () => {
