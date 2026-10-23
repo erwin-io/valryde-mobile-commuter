@@ -215,6 +215,33 @@ describe('TripPlannerComponent', () => {
     expect(component.origin()).toBeNull();
     expect(component.locationMessage()).toContain('Philippines');
   });
+  it('preserves a selected start when a requested fix is denied or outside the Philippines', async () => {
+    selectBoth();
+    locate.mockResolvedValueOnce({ kind: 'denied' });
+    await component.locate();
+    expect(component.origin()?.name).toBe(start.name);
+    expect(component.locationMessage()).toContain('Keep your selected start');
+    locate.mockResolvedValueOnce({ kind: 'located', position: [0, 51] });
+    await component.locate();
+    expect(component.origin()?.name).toBe(start.name);
+    expect(component.destination()?.name).toBe(end.name);
+  });
+  it('ignores a pending location after the rider starts editing the origin', async () => {
+    selectBoth();
+    let resolve!: (r: LocationResult) => void;
+    locate.mockImplementation(
+      () =>
+        new Promise<LocationResult>((r) => {
+          resolve = r;
+        }),
+    );
+    const pending = component.locate();
+    component.edit('origin');
+    resolve({ kind: 'located', position: [123.8, 10.4] });
+    await pending;
+    expect(component.origin()?.name).toBe(start.name);
+    expect(component.locating()).toBe(false);
+  });
   it('ignores a late location after a manual origin is selected or component is destroyed', async () => {
     let resolve!: (r: LocationResult) => void;
     locate.mockImplementation(

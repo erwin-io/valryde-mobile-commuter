@@ -234,6 +234,12 @@ export class TripPlannerComponent {
   }
 
   edit(target: Endpoint): void {
+    if (target === 'origin') {
+      // A manual start edit supersedes any foreground fix still being requested.
+      this.locationGeneration++;
+      this.locating.set(false);
+      this.locationMessage.set('');
+    }
     this.target.set(target);
     this.query.setValue('');
     this.clearRoutes();
@@ -276,7 +282,6 @@ export class TripPlannerComponent {
     if (!this.online() || this.session.status() !== 'signed-in') return;
     const generation = ++this.locationGeneration;
     this.locating.set(true);
-    this.origin.set(null);
     this.clearRoutes();
     this.locationMessage.set('');
     const result = await this.location.locate();
@@ -285,12 +290,21 @@ export class TripPlannerComponent {
     if (result.kind === 'located') {
       const point = { lng: result.position[0], lat: result.position[1] };
       if (withinPhilippines(point)) this.origin.set({ ...point, name: 'Your current location' });
-      else this.locationMessage.set('Choose a starting point in the Philippines.');
+      else
+        this.locationMessage.set(
+          this.origin()
+            ? 'Your location is outside the Philippines. Keep your selected start or choose another.'
+            : 'Choose a starting point in the Philippines.',
+        );
     } else
       this.locationMessage.set(
         result.kind === 'denied'
-          ? 'Location permission is off. Search for a starting point instead.'
-          : 'Couldn’t find your location. Try again or search for a starting point.',
+          ? this.origin()
+            ? 'Location permission is off. Keep your selected start or choose another.'
+            : 'Location permission is off. Search for a starting point instead.'
+          : this.origin()
+            ? 'Couldn’t find your location. Keep your selected start or choose another.'
+            : 'Couldn’t find your location. Try again or search for a starting point.',
       );
   }
 
