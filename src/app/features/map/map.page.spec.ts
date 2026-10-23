@@ -117,6 +117,47 @@ describe('MapPage recenter', () => {
     expect(location.locate).toHaveBeenCalledOnce();
   });
 
+  it('does not request GPS after a pending permission check finishes on a hidden tab', async () => {
+    const { page, location, alerts } = await setup({
+      granted: false,
+      result: { kind: 'located', position: [121, 14.6] },
+    });
+    let finishPermission!: (granted: boolean) => void;
+    location.isGranted.mockImplementationOnce(
+      () => new Promise<boolean>((resolve) => (finishPermission = resolve)),
+    );
+    const pending = page.recenter();
+    page.ionViewWillLeave();
+    finishPermission(false);
+    await pending;
+    expect(alerts.create).not.toHaveBeenCalled();
+    expect(location.locate).not.toHaveBeenCalled();
+    expect(location.watch).not.toHaveBeenCalled();
+  });
+
+  it('does not request GPS after the location explanation resolves on a hidden tab', async () => {
+    const { page, location, alerts } = await setup({
+      granted: false,
+      result: { kind: 'located', position: [121, 14.6] },
+    });
+    let finishExplanation!: (result: { role: string }) => void;
+    const alert = {
+      present: vi.fn(),
+      onDidDismiss: vi.fn(
+        () => new Promise<{ role: string }>((resolve) => (finishExplanation = resolve)),
+      ),
+    };
+    alerts.create.mockResolvedValueOnce(alert);
+    const pending = page.recenter();
+    await vi.waitFor(() => expect(alert.onDidDismiss).toHaveBeenCalledOnce());
+    page.ionViewWillLeave();
+    finishExplanation({ role: 'confirm' });
+    await pending;
+    expect(alert.present).toHaveBeenCalledOnce();
+    expect(location.locate).not.toHaveBeenCalled();
+    expect(location.watch).not.toHaveBeenCalled();
+  });
+
   describe('follow mode', () => {
     const located = { granted: true, result: { kind: 'located', position: [123.89, 10.31] } as LocationResult };
 

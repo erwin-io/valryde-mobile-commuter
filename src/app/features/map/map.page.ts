@@ -157,7 +157,10 @@ export class MapPage {
 
   constructor() {
     addIcons({ layersOutline, locateOutline, navigate, searchOutline });
-    inject(DestroyRef).onDestroy(() => this.stopFollowing());
+    inject(DestroyRef).onDestroy(() => {
+      this.locateRequest++;
+      this.stopFollowing();
+    });
     // ?route=<id>&direction=<id> keeps the selection deep-linkable and back-navigable.
     inject(ActivatedRoute)
       .queryParamMap.pipe(takeUntilDestroyed())
@@ -219,19 +222,29 @@ export class MapPage {
 
   async recenter(): Promise<void> {
     if (this.locating()) return;
+    const request = ++this.locateRequest;
     if (this.following()) {
       this.stopFollowing();
       return;
     }
-    if (!this.explained && !(await this.location.isGranted())) {
-      this.explained = true;
-      if (!(await this.explainLocation())) return;
+    if (!this.explained) {
+      const granted = await this.location.isGranted();
+      if (request !== this.locateRequest || !this.active()) return;
+      if (!granted) {
+        const allowed = await this.explainLocation(request);
+        if (request !== this.locateRequest || !this.active()) return;
+        this.explained = true;
+        if (!allowed) return;
+      }
     }
-    if ((await this.showMyLocation()) && this.active()) await this.startFollowing();
+    if ((await this.showMyLocation(request)) && request === this.locateRequest && this.active())
+      await this.startFollowing();
   }
 
   private async locateIfGranted(): Promise<void> {
-    if (await this.location.isGranted()) await this.showMyLocation();
+    const request = ++this.locateRequest;
+    const granted = await this.location.isGranted();
+    if (granted && request === this.locateRequest && this.active()) await this.showMyLocation(request);
   }
 
   private async startFollowing(): Promise<void> {
@@ -256,8 +269,7 @@ export class MapPage {
   }
 
   /** Locates once and centers the map. Returns true when a position was found. */
-  private async showMyLocation(): Promise<boolean> {
-    const request = ++this.locateRequest;
+  private async showMyLocation(request: number): Promise<boolean> {
     this.locating.set(true);
     try {
       const result = await this.location.locate();
@@ -282,7 +294,7 @@ export class MapPage {
     return false;
   }
 
-  private async explainLocation(): Promise<boolean> {
+  private async explainLocation(request: number): Promise<boolean> {
     const alert = await this.alerts.create({
       header: 'Show where you are?',
       message:
@@ -292,6 +304,7 @@ export class MapPage {
         { text: 'Allow', role: 'confirm' },
       ],
     });
+    if (request !== this.locateRequest || !this.active()) return false;
     await alert.present();
     return (await alert.onDidDismiss()).role === 'confirm';
   }
