@@ -322,6 +322,9 @@ async function api(endpoint, options = {}) {
       assert.ok(
         (await page.locator('app-route-list-item').innerText()).includes(routes[0].routeCode),
       );
+      await searchInput.fill('no-such-fixture-route-004');
+      await page.getByText('No routes match', { exact: false }).waitFor();
+      assert.equal(await page.locator('app-route-list-item').count(), 0);
       await searchInput.fill('');
       await page.waitForFunction(
         () => document.querySelectorAll('app-route-list-item').length >= 2,
@@ -432,6 +435,17 @@ async function api(endpoint, options = {}) {
           element.dispatchEvent(new CustomEvent('ionRefresh', { bubbles: true })),
         );
       await page.waitForFunction(() => !document.querySelector('.offline-note'));
+    });
+    await check(`real-browser-malformed-route-deep-link-${width}`, async () => {
+      await page.goto(`${base}/tabs/map?route=not-a-uuid`);
+      await page
+        .locator('app-route-detail')
+        .getByText('Route not found', { exact: true })
+        .waitFor();
+      assert.equal(
+        await page.locator('app-route-detail').getByRole('button', { name: 'Try again' }).count(),
+        0,
+      );
     });
     if (email && password) {
       await check(`real-browser-auth-profile-and-G6-${width}`, async () => {

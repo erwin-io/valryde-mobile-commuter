@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-23T03:29:16.804Z",
+  "executedAt": "2026-10-23T03:32:09.451Z",
   "backendOrigin": "http://127.0.0.1:3000",
   "mode": "REAL_BACKEND_NO_MOCKS",
   "checks": [
@@ -52,6 +52,10 @@
       "result": "PASSED"
     },
     {
+      "name": "real-browser-malformed-route-deep-link-390",
+      "result": "PASSED"
+    },
+    {
       "name": "real-browser-route-code-search-320",
       "result": "PASSED"
     },
@@ -69,6 +73,10 @@
     },
     {
       "name": "real-browser-offline-metadata-and-reconnect-320",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-malformed-route-deep-link-320",
       "result": "PASSED"
     }
   ],
@@ -154,42 +162,6 @@
     },
     {
       "method": "GET",
-      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
-      "status": 200,
-      "via": "browser-proxy"
-    },
-    {
-      "method": "GET",
-      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
-      "status": 200,
-      "via": "browser-proxy"
-    },
-    {
-      "method": "GET",
-      "path": "/api/transit-routes",
-      "status": 200,
-      "via": "browser-proxy"
-    },
-    {
-      "method": "GET",
-      "path": "/api/transit-routes",
-      "status": 200,
-      "via": "browser-proxy"
-    },
-    {
-      "method": "GET",
-      "path": "/api/transit-routes",
-      "status": 200,
-      "via": "browser-proxy"
-    },
-    {
-      "method": "GET",
-      "path": "/api/transit-routes",
-      "status": 200,
-      "via": "browser-proxy"
-    },
-    {
-      "method": "GET",
       "path": "/api/transit-routes",
       "status": 200,
       "via": "browser-proxy"
@@ -210,6 +182,66 @@
       "method": "GET",
       "path": "/api/transit-routes",
       "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/not-a-uuid",
+      "status": 400,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/not-a-uuid",
+      "status": 400,
       "via": "browser-proxy"
     }
   ],
