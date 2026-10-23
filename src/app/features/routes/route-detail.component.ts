@@ -55,7 +55,12 @@ export type RouteDetailState =
     <ion-header>
       <ion-toolbar>
         @if (route(); as r) {
-          <app-route-badge slot="start" class="badge" [code]="r.routeCode" [color]="r.routeColorHex" />
+          <app-route-badge
+            slot="start"
+            class="badge"
+            [code]="r.routeCode"
+            [color]="r.routeColorHex"
+          />
           <ion-title>{{ r.publicName }}</ion-title>
         } @else {
           <ion-title>Route details</ion-title>
@@ -64,11 +69,19 @@ export type RouteDetailState =
           <!-- ion-button copies aria-* into its shadow button only once, so each state gets its own button. -->
           @if (route()) {
             @if (isFavorite()) {
-              <ion-button aria-label="Remove from favorites" aria-pressed="true" (click)="toggleFavorite()">
+              <ion-button
+                aria-label="Remove from favorites"
+                aria-pressed="true"
+                (click)="toggleFavorite()"
+              >
                 <ion-icon slot="icon-only" name="star" aria-hidden="true" />
               </ion-button>
             } @else {
-              <ion-button aria-label="Save to favorites" aria-pressed="false" (click)="toggleFavorite()">
+              <ion-button
+                aria-label="Save to favorites"
+                aria-pressed="false"
+                (click)="toggleFavorite()"
+              >
                 <ion-icon slot="icon-only" name="star-outline" aria-hidden="true" />
               </ion-button>
             }
@@ -100,8 +113,10 @@ export type RouteDetailState =
           @if (route(); as r) {
             @if (savedAt(); as at) {
               <ion-note class="note offline" role="status">
-                You’re offline. Showing a copy saved {{ savedLabel(at) }}; it may be out of date.
+                Showing a copy saved {{ savedLabel(at) }} because VALRYDE cannot be reached; it may
+                be out of date.
               </ion-note>
+              <ion-button fill="clear" (click)="retry.emit()">Try live route details</ion-button>
             }
             @if (favoriteNotice(); as notice) {
               <ion-note class="note" role="status">{{ notice }}</ion-note>

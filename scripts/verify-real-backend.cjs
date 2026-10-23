@@ -76,7 +76,7 @@ async function api(endpoint, options = {}) {
     assert.equal(r.body.status, 'ok');
     assert.equal(r.body.database, 'ok');
   });
-  let routes, direction, first, last;
+  let routes, direction, alternateDirection, first, last;
   await check('real-seeded-route-list-and-detail', async () => {
     const r = await api('/api/transit-routes?page=1&pageSize=20');
     assert.equal(r.status, 200);
@@ -89,8 +89,31 @@ async function api(endpoint, options = {}) {
       (d) => d.status === 'ACTIVE' && d.geometry.coordinates.length >= 2,
     );
     assert.ok(direction);
+    alternateDirection = detail.body.route.directions.find(
+      (d) => d.status === 'ACTIVE' && d.id !== direction.id,
+    );
+    assert.ok(alternateDirection);
     first = direction.geometry.coordinates[0];
     last = direction.geometry.coordinates.at(-1);
+  });
+  await check('real-seeded-route-search-and-pagination', async () => {
+    const firstPage = await api('/api/transit-routes?page=1&pageSize=1');
+    assert.equal(firstPage.status, 200);
+    assert.equal(firstPage.body.pagination.page, 1);
+    assert.equal(firstPage.body.routes.length, 1);
+    assert.ok(firstPage.body.pagination.total >= 2);
+    assert.ok(firstPage.body.pagination.totalPages >= 2);
+    const secondPage = await api('/api/transit-routes?page=2&pageSize=1');
+    assert.equal(secondPage.status, 200);
+    assert.equal(secondPage.body.pagination.page, 2);
+    assert.equal(secondPage.body.routes.length, 1);
+    assert.notEqual(secondPage.body.routes[0].id, firstPage.body.routes[0].id);
+    const searched = await api(
+      `/api/transit-routes?q=${encodeURIComponent(routes[0].routeCode)}&page=1&pageSize=20`,
+    );
+    assert.equal(searched.status, 200);
+    assert.ok(searched.body.routes.some((route) => route.id === routes[0].id));
+    assert.ok(searched.body.pagination.total >= 1);
   });
   await check('place-search-auth-boundary', async () => {
     const r = await api('/api/places/search?q=Ayala&limit=5');
@@ -287,6 +310,25 @@ async function api(endpoint, options = {}) {
     const page = await context.newPage();
     const pageErrors = [];
     page.on('pageerror', () => pageErrors.push('pageerror'));
+    await check(`real-browser-route-code-search-${width}`, async () => {
+      await page.goto(`${base}/tabs/routes`);
+      const searchInput = page.locator('ion-searchbar input');
+      await searchInput.fill(routes[0].routeCode);
+      await page.waitForFunction(
+        () => document.querySelectorAll('app-route-list-item').length === 1,
+        null,
+        { timeout: 20000 },
+      );
+      assert.ok(
+        (await page.locator('app-route-list-item').innerText()).includes(routes[0].routeCode),
+      );
+      await searchInput.fill('');
+      await page.waitForFunction(
+        () => document.querySelectorAll('app-route-list-item').length >= 2,
+        null,
+        { timeout: 20000 },
+      );
+    });
     await check(`real-browser-route-list-detail-map-${width}`, async () => {
       await page.goto(`${base}/tabs/routes`);
       await page.getByText(routes[0].publicName, { exact: true }).click();
@@ -299,6 +341,7 @@ async function api(endpoint, options = {}) {
       // Provider style must load. This run does not stub tiles/styles or hide provider failures.
       await page.waitForFunction(
         () => !document.querySelector('app-transit-map')?.textContent.includes('Loading map'),
+        null,
         { timeout: 20000 },
       );
       assert.equal(await page.getByText('The map couldn’t load', { exact: true }).count(), 0);
@@ -308,6 +351,27 @@ async function api(endpoint, options = {}) {
       );
       assert.deepEqual(pageErrors, []);
       await page.screenshot({ path: path.join(directory, `REAL-route-map-${width}.png`) });
+    });
+    await check(`real-browser-direction-map-handoff-${width}`, async () => {
+      let stage = 'click';
+      try {
+        await page
+          .locator('app-route-detail ion-segment-button')
+          .filter({ hasText: alternateDirection.directionLabel })
+          .click();
+        stage = 'url';
+        await page.waitForURL((url) => url.searchParams.get('direction') === alternateDirection.id);
+        stage = 'direction-content';
+        await page
+          .locator('app-route-detail')
+          .getByText(alternateDirection.originName, { exact: true })
+          .waitFor();
+        stage = 'map-canvas';
+        assert.equal(await page.locator('canvas.maplibregl-canvas').count(), 1);
+      } catch (error) {
+        report.directionHandoffDiagnosticStage = stage;
+        throw error;
+      }
     });
     await check(`real-browser-map-permission-denial-and-pitch-${width}`, async () => {
       await page.getByRole('button', { name: 'Close route details', exact: true }).click();
@@ -342,6 +406,13 @@ async function api(endpoint, options = {}) {
       await page.locator('.offline-note').waitFor();
       await page.getByText(routes[0].publicName, { exact: true }).click();
       await page.locator('app-route-detail .offline').waitFor();
+      assert.ok(
+        (await page.locator('app-route-detail .offline').innerText()).includes(
+          'because VALRYDE cannot be reached',
+        ),
+      );
+      await page.getByRole('button', { name: 'Try live route details', exact: true }).click();
+      await page.locator('app-route-detail .offline').waitFor();
       const reconciledResponse = page.waitForResponse(
         (response) =>
           new URL(response.url()).pathname === `/api/transit-routes/${routes[0].id}` &&
@@ -350,7 +421,7 @@ async function api(endpoint, options = {}) {
       await context.setOffline(false);
       await reconciledResponse;
       // A cached route must reconcile without requiring a new route selection.
-      await page.waitForFunction(() => !document.querySelector('app-route-detail .offline'), {
+      await page.waitForFunction(() => !document.querySelector('app-route-detail .offline'), null, {
         timeout: 20000,
       });
       await page.getByRole('button', { name: 'Close route details', exact: true }).click();

@@ -11,7 +11,12 @@ import { FALLBACK_ROUTE_COLOR, routeColor } from './route-geometry';
 import { RouteSelectionService } from './route-selection.service';
 import { RoutesPage } from './routes.page';
 import { transitRoute } from './test-fixtures';
-import { ROUTE_REQUEST_TIMEOUT_MS, TransitRoute, TransitRoutePage, TransitRoutesService } from './transit-routes.service';
+import {
+  ROUTE_REQUEST_TIMEOUT_MS,
+  TransitRoute,
+  TransitRoutePage,
+  TransitRoutesService,
+} from './transit-routes.service';
 
 function memoryStorage() {
   const data = new Map<string, string>();
@@ -86,7 +91,9 @@ describe('TransitRoutesService caching and timeouts', () => {
     expect(cache.detail('route-1')).not.toBeNull();
 
     const gone = firstValueFrom(service.get('route-1'));
-    http.expectOne('/api/transit-routes/route-1').flush({ error: { code: 'NOT_FOUND' } }, { status: 404, statusText: 'x' });
+    http
+      .expectOne('/api/transit-routes/route-1')
+      .flush({ error: { code: 'NOT_FOUND' } }, { status: 404, statusText: 'x' });
     await expect(gone).rejects.toMatchObject({ status: 404 });
     expect(cache.detail('route-1')).toBeNull();
   });
@@ -181,7 +188,8 @@ describe('Offline fallbacks', () => {
     await settle(fixture);
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('04L');
-    expect(text).toContain('You’re offline. Showing routes saved');
+    expect(text).toContain('Showing routes saved');
+    expect(text).toContain('because VALRYDE cannot be reached');
     expect(fixture.componentInstance.hasMore()).toBe(false);
   });
 

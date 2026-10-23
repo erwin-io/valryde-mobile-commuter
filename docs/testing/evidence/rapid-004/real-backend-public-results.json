@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-23T03:05:16.942Z",
+  "executedAt": "2026-10-23T03:29:16.804Z",
   "backendOrigin": "http://127.0.0.1:3000",
   "mode": "REAL_BACKEND_NO_MOCKS",
   "checks": [
@@ -9,6 +9,10 @@
     },
     {
       "name": "real-seeded-route-list-and-detail",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-seeded-route-search-and-pagination",
       "result": "PASSED"
     },
     {
@@ -28,7 +32,15 @@
       "result": "PASSED"
     },
     {
+      "name": "real-browser-route-code-search-390",
+      "result": "PASSED"
+    },
+    {
       "name": "real-browser-route-list-detail-map-390",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-direction-map-handoff-390",
       "result": "PASSED"
     },
     {
@@ -40,7 +52,15 @@
       "result": "PASSED"
     },
     {
+      "name": "real-browser-route-code-search-320",
+      "result": "PASSED"
+    },
+    {
       "name": "real-browser-route-list-detail-map-320",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-direction-map-handoff-320",
       "result": "PASSED"
     },
     {
@@ -75,6 +95,21 @@
     },
     {
       "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
       "path": "/api/places/search",
       "status": 401
     },
@@ -101,6 +136,24 @@
     },
     {
       "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
       "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
       "status": 200,
       "via": "browser-proxy"
@@ -108,6 +161,24 @@
     {
       "method": "GET",
       "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
       "status": 200,
       "via": "browser-proxy"
     },

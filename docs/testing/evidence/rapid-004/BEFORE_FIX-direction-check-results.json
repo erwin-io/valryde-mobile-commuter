@@ -1,0 +1,138 @@
+{
+  "executedAt": "2026-10-23T03:27:06.087Z",
+  "backendOrigin": "http://127.0.0.1:3000",
+  "mode": "REAL_BACKEND_NO_MOCKS",
+  "checks": [
+    {
+      "name": "backend-health",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-seeded-route-list-and-detail",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-seeded-route-search-and-pagination",
+      "result": "PASSED"
+    },
+    {
+      "name": "place-search-auth-boundary",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-direct-discovery-forward-travel-order",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-direct-discovery-empty",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-discovery-invalid-coordinates",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-route-code-search-390",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-route-list-detail-map-390",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-direction-map-handoff-390",
+      "result": "FAILED",
+      "errorType": "TimeoutError"
+    }
+  ],
+  "gaps": [
+    "Authenticated acceptance CREDENTIALS_NOT_CONFIGURED; neither passed nor failed."
+  ],
+  "apiResponses": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/places/search",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/discover",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/discover",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/discover",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200,
+      "via": "browser-proxy"
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
+      "status": 200,
+      "via": "browser-proxy"
+    }
+  ],
+  "database": {
+    "name": "valryde_ui_dev",
+    "verification": "Tech Lead attested; health endpoint does not expose database identity"
+  },
+  "credentialsStatus": "CREDENTIALS_NOT_CONFIGURED"
+}

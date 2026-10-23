@@ -8,9 +8,10 @@ Directives: VALRYDE-C-RAPID-DELIVERY-004 and C-SEC-001. PR #13 is the independen
 - Tech Lead identifies the attached database as isolated `valryde_ui_dev`. The health endpoint does not expose database identity; this is an explicit owner attestation, not a new SQL inspection.
 - Real seeded public catalogue has two ACTIVE routes; forward travel-order matching, empty direct discovery, invalid-coordinate rejection and unauthenticated place search were exercised.
 - Real Chrome at 390×844 and 320×568 loaded the seeded route/details and official route line with the actual OpenFreeMap style/tiles. No route interception, mocked responses or substituted style was used. Screenshots inspected.
-- Expanded live runner: 12 checks passed, zero failed, including actual browser permission denial, pitch, offline metadata fallback and online reconciliation at both widths. Exact latest results: `evidence/rapid-004/real-backend-public-results.json`. The earlier failed reconnect run is preserved as `BEFORE_FIX-offline-reconnect-results.json`; its defect is fixed and covered by two new service tests.
+- Expanded live runner: 17 checks passed, zero failed, including real seeded route-code search and two-page API pagination, browser route-code search and direction/map handoff, permission denial, pitch, saved metadata fallback, manual retry and online reconciliation at both widths. Exact latest results: `evidence/rapid-004/real-backend-public-results.json`. The earlier failed reconnect run is preserved as `BEFORE_FIX-offline-reconnect-results.json`; its product defect is fixed and covered by two new service tests. A later direction test timed out because its selector assumed Ionic reflected a `value` attribute; `BEFORE_FIX-direction-check-results.json` preserves that harness failure. Selecting by the visible direction label passed at both widths.
+- Review correction: the saved list/detail now says VALRYDE cannot be reached, which is accurate when the API is down but the phone still reports connectivity. The saved detail offers a manual live retry if the API recovers without a browser `online` event. The real browser runner exercised the retry while offline and the subsequent live reconciliation.
 - Final web gates: `npm run lint`, `npm run typecheck`, `npm test` (19 files, 189 tests), `npm run build` (642.18 kB initial bundle), `npm audit --omit=dev` (zero runtime vulnerabilities) and `git diff --check` passed.
-- Final production bundle was synchronized with Capacitor; Gradle `test lintDebug assembleDebug` passed (381 actionable tasks, 65 executed). Debug APK SHA-256: `5F1F1776A700A9564FBA753B0D8BD31A6594484994A2FF7F673B313F34ADEA3C`.
+- Final production bundle was synchronized with Capacitor; Gradle `test lintDebug assembleDebug` passed (381 actionable tasks, 65 executed). Debug APK SHA-256 after the acceptance-recovery copy/retry correction: `5904B9C2552108D40AA8FD9C8D9631B14B9A6174F8CCCFDE6EDD501B05B143E9`.
 
 ## Approved secret provisioning
 
@@ -41,6 +42,31 @@ The authenticated runner is prepared to exercise normal fixture login/profile, p
 | 22 | Existing merged flows/race suite; live API connectivity and unauthenticated boundary | Secure fixture login; registration/verification/recovery test inbox; native Google OAuth/links/storage acceptance | Not newly Completed |
 | 23 | Real provider map and seeded official line at two widths; permission denial/pitch, offline saved route and reconnect to the actual API verified in Chrome; existing controls/cleanup/cache tests | Native target/runtime permissions/follow; approved offline tile rights | Not newly Completed |
 | 37 | Real discovery matching/empty/validation; 401 place boundary; real route/map handoff | Authenticated place 200/503/429; provider-enabled candidate/empty attribution and complete destination flow | Not newly Completed |
+
+## Acceptance recovery decision, IDs 22–37
+
+No item below is newly `FULLY ACCEPTED` by Agent C. The statuses name the next binding gate, not a regression of merged code. PR #14 is separately reviewable UI but ships a gateway that reports unavailable and issues no tracking request.
+
+| ID | Status | Exact evidence and smallest remaining step |
+|---:|---|---|
+| 22 | DEVICE/OWNER GATED | Merged account flows/race coverage and 189-test suite; run the secure fixture login/profile/rotation/logout/replay checks, supply an approved inbox/link sink and native Google OAuth/device target. |
+| 23 | DEVICE/OWNER GATED | Real Chrome map at 390/320, provider tiles/official line, denied location, pitch, metadata fallback/reconnect, Android build; verify native permission/follow/rotation and obtain tile cache rights before claiming offline base maps. |
+| 24 | CODE COMPLETE / ACCEPTANCE PENDING | Merged debounced search/cancellation; real API and Chrome route-code search return fixture DEV-10A at 390/320. Finish browser error/empty and keyboard/accessibility acceptance. |
+| 25 | CODE COMPLETE / ACCEPTANCE PENDING | Merged list/pagination/cache behavior; real API pageSize=1 returned distinct DEV-10A and DEV-20B pages. Browser load-more needs a fixture set above the UI page size of 20. |
+| 26 | CODE COMPLETE / ACCEPTANCE PENDING | Merged detail/retry/cache; real route detail and saved-detail/manual-retry/reconnect browser acceptance pass. Finish withdrawn-route and current fixture/error review against approved data. |
+| 27 | CODE COMPLETE / ACCEPTANCE PENDING | Merged explicit direction/navigation tests; real fixture direction switch updated the map URL and visible endpoints at 390/320. Finish back/deep-link and device acceptance if required. |
+| 28 | DEVICE/OWNER GATED | Merged validated official geometry/color/fit behavior and real Chrome map line at two widths; verify visual fit and lifecycle on Android. |
+| 29 | CONTRACT BLOCKED | PR #14 marker/adapter UI tests only; Agent B must approve public snapshot endpoint/DTO and supply real eligible vehicles. |
+| 30 | CONTRACT BLOCKED | PR #14 bounded received-fix interpolation tests; Agent B must approve ordering, removal and reconciliation semantics. |
+| 31 | CONTRACT BLOCKED | PR #14 client narrowing tests; Agent B must provide server-authoritative route/direction eligibility. |
+| 32 | CONTRACT BLOCKED | PR #14 accessible route labels/tests; Agent B must authorize route labels in its public vehicle DTO. |
+| 33 | CONTRACT BLOCKED | PR #14 plate/details allow-list tests; Agent B must authorize public vehicle details and privacy fields. |
+| 34 | CONTRACT BLOCKED | PR #14 validated vehicle color tests; Agent B must authorize the public physical-color source. |
+| 35 | CONTRACT BLOCKED | PR #14 status/freshness/lifecycle tests; Agent B must release status, timestamp and realtime reconciliation contract. |
+| 36 | CONTRACT BLOCKED | Merged local Favorites tests and PR #14 count UI tests; Agent B must approve available-count semantics, then native Preferences persistence needs device evidence. |
+| 37 | CODE COMPLETE / ACCEPTANCE PENDING | PR #13 G6 implementation, 13 live public checks and 189 unit tests; run authenticated place 200/503/429 and actual candidate/empty flow with the approved fixture, then native destination selection if required. |
+
+IDs 24, 26 and 27 are closest to independent public acceptance after the remaining error, back/deep-link and accessibility review; they do not require commuter credentials or a new Agent A/B API. Authenticated tests alone cannot complete ID 22 because inbox, OAuth and device gates remain. ID 37 is the closest primary target after authentication if the approved provider yields normalized candidates; a real 503 establishes the disabled-state behavior but leaves provider-enabled candidate acceptance open. IDs 29–36 require Agent B, and no additional Agent A G6 endpoint is currently missing.
 
 ## Device and provider gates
 
