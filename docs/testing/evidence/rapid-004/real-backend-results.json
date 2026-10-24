@@ -1,0 +1,81 @@
+{
+  "executedAt": "2026-10-23T02:49:57.708Z",
+  "backendOrigin": "http://127.0.0.1:3000",
+  "mode": "REAL_BACKEND_NO_MOCKS",
+  "checks": [
+    {
+      "name": "backend-health",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-seeded-route-list-and-detail",
+      "result": "PASSED"
+    },
+    {
+      "name": "place-search-auth-boundary",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-direct-discovery-forward-travel-order",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-direct-discovery-empty",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-discovery-invalid-coordinates",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-route-list-detail-map-390",
+      "result": "PASSED"
+    },
+    {
+      "name": "real-browser-route-list-detail-map-320",
+      "result": "PASSED"
+    }
+  ],
+  "gaps": [
+    "Authenticated acceptance NOT_RUN: secure fixture credential source not provisioned.",
+    "Registration/verification/recovery/email-change NOT_RUN until approved test inbox/sink is supplied.",
+    "Google OAuth/native links/offline tile rights/native target acceptance require approved configuration/target."
+  ],
+  "apiResponses": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/d4000000-0000-4000-8000-000000000001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/places/search",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/discover",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/discover",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/transit-routes/discover",
+      "status": 400
+    }
+  ]
+}

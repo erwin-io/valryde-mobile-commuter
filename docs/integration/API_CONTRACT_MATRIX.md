@@ -90,3 +90,7 @@ Observed backend behaviour the client depends on (verified locally on 2026-10-21
 - Refresh rotates. Reusing a rotated refresh token returns `401 SESSION_REVOKED` **and revokes the newest token in that family**, so the client serializes refreshes.
 - Confirming an email change bumps `credentials_version` and revokes all sessions, like a password change. The frontend handoff documents this only for password changes.
 - Logout revokes only the submitted refresh token (the current device).
+
+## ID 37 — merged G6 consumer (2026-10-23)
+
+Canonical API main `810c8a13356ddbf0e28a4faf5ad7f86ce0a30479` now includes merged G6 PR #28. Historical ABSENT/gated entries above describe the pre-G6 audit. Runtime now consumes authenticated `GET /api/places/search` and public `GET /api/transit-routes/discover`; see `docs/testing/DESTINATION_DISCOVERY_37.md`. No direct provider access or transfer planner. Live consumer contracts remain unavailable.

@@ -24,7 +24,7 @@ import { StatePanelComponent } from '../../shared/state-panel.component';
 import { RouteCacheService, savedAtLabel } from './route-cache.service';
 import { RouteListItemComponent } from './route-list-item.component';
 import { TransitRoute, TransitRoutesService } from './transit-routes.service';
-import { TripPlannerGateComponent } from './trip-planner-gate.component';
+import { TripPlannerComponent } from './trip-planner.component';
 
 const PAGE_SIZE = 20;
 
@@ -52,7 +52,7 @@ type ListStatus = 'loading' | 'ready' | 'error';
     IonButton,
     RouteListItemComponent,
     StatePanelComponent,
-    TripPlannerGateComponent,
+    TripPlannerComponent,
   ],
   template: `
     <ion-header>
@@ -85,7 +85,7 @@ type ListStatus = 'loading' | 'ready' | 'error';
 
     <ion-content>
       @if (mode() === 'trip') {
-        <app-trip-planner-gate />
+        <app-trip-planner />
       } @else {
         <ion-refresher slot="fixed" (ionRefresh)="refresh($any($event.target))">
           <ion-refresher-content />
@@ -132,7 +132,8 @@ type ListStatus = 'loading' | 'ready' | 'error';
             } @else {
               @if (offlineSavedAt(); as at) {
                 <p class="offline-note" role="status">
-                  You’re offline. Showing routes saved {{ savedLabel(at) }}; search needs a connection.
+                  Showing routes saved {{ savedLabel(at) }} because VALRYDE cannot be reached. They
+                  may be out of date; search needs a connection.
                 </p>
               } @else {
                 <p class="result-count" aria-live="polite">{{ countLabel() }}</p>
@@ -148,7 +149,10 @@ type ListStatus = 'loading' | 'ready' | 'error';
                   <ion-button fill="clear" (click)="loadMore()">Retry</ion-button>
                 </div>
               }
-              <ion-infinite-scroll [disabled]="!hasMore() || loadMoreFailed()" (ionInfinite)="loadMore($any($event.target))">
+              <ion-infinite-scroll
+                [disabled]="!hasMore() || loadMoreFailed()"
+                (ionInfinite)="loadMore($any($event.target))"
+              >
                 <ion-infinite-scroll-content loadingText="Loading more routes…" />
               </ion-infinite-scroll>
             }
@@ -195,7 +199,10 @@ export class RoutesPage {
   private readonly router = inject(Router);
   private readonly cache = inject(RouteCacheService);
 
-  readonly search = new FormControl('', { nonNullable: true, validators: [Validators.maxLength(160)] });
+  readonly search = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.maxLength(160)],
+  });
   readonly mode = signal<'routes' | 'trip'>('routes');
   readonly query = signal('');
   readonly status = signal<ListStatus>('loading');
@@ -214,7 +221,9 @@ export class RoutesPage {
 
   protected readonly skeletonRows = [1, 2, 3, 4, 5, 6];
   readonly hasMore = computed(() => this.page() < this.totalPages());
-  protected readonly failureText = computed(() => failureCopy(this.failure() ?? { kind: 'unavailable' }));
+  protected readonly failureText = computed(() =>
+    failureCopy(this.failure() ?? { kind: 'unavailable' }),
+  );
   protected readonly supportSuffix = computed(() => {
     const id = this.failure()?.requestId;
     return id ? ` (Reference: ${id})` : '';
