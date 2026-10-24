@@ -16,6 +16,8 @@ import type { FeatureCollection } from 'geojson';
 import { GeoJSONSource, Map as MapLibreMap, MapOptions, setWorkerUrl } from 'maplibre-gl';
 import { StatePanelComponent } from '../../shared/state-panel.component';
 import { LngLat } from './location.service';
+import { PublicVehicle } from '../tracking/tracking-gateway';
+import { VEHICLE_MARKER_FACTORY, VehicleMarkerRenderer } from '../tracking/vehicle-marker-renderer';
 
 export type MapState = 'initializing' | 'ready' | 'style-error';
 
@@ -111,6 +113,8 @@ export class TransitMapComponent {
   readonly zoom = input.required<number>();
   readonly userLocation = input<LngLat | null>(null);
   readonly routeLine = input<RouteLine | null>(null);
+  readonly vehicles = input<readonly PublicVehicle[]>([]);
+  readonly vehicleSelected = output<string>();
   /** Pixels hidden by overlays at the bottom (e.g. a sheet), used when fitting a route. */
   readonly bottomInset = input(0);
   /** Whether the Ionic Map tab is visible. Hidden tabs stop camera work until re-entry. */
@@ -125,6 +129,8 @@ export class TransitMapComponent {
   private readonly container = viewChild.required<ElementRef<HTMLElement>>('container');
   private readonly createMap = inject(MAP_FACTORY);
   private map?: MapLike;
+  private readonly markerFactory = inject(VEHICLE_MARKER_FACTORY);
+  private markers?: VehicleMarkerRenderer;
   private fittedRouteId?: string;
 
   constructor() {
@@ -141,6 +147,14 @@ export class TransitMapComponent {
       destroyRef.onDestroy(() => observer.disconnect());
     });
     destroyRef.onDestroy(() => this.dispose());
+
+    effect(() => {
+      const vehicles = this.vehicles();
+      const active = this.active();
+      if (this.state() !== 'ready') return;
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      this.markers?.render(active ? vehicles : [], !reduceMotion);
+    });
 
     effect(() => {
       const position = this.userLocation();
@@ -194,6 +208,7 @@ export class TransitMapComponent {
       attributionControl: { compact: true },
     });
     this.map = map;
+    this.markers = new VehicleMarkerRenderer(map, this.markerFactory, id => this.vehicleSelected.emit(id));
 
     map.on('load', () => {
       if (this.map !== map) return;
@@ -296,6 +311,8 @@ export class TransitMapComponent {
   }
 
   private dispose(): void {
+    this.markers?.clear();
+    this.markers = undefined;
     this.map?.remove();
     this.map = undefined;
   }

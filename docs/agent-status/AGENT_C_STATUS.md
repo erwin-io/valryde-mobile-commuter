@@ -2,23 +2,17 @@
 
 ## Current snapshot
 
-- Updated at (ISO 8601, Asia/Manila): 2026-10-22T13:35:07+08:00 (preserved historical entries may contain later wall-clock stamps from prior executors)
-- Agent / module: C — Commuter Mobile
-- Repository: `valryde-mobile-commuter`
-- Branch / HEAD SHA: `fix/22-28-36-independent-closure` from integrated `origin/main` `fec717e60ebb58f9cc1489e60088aa5a8db6b7af`; tested closure source commit `59196b2` plus this status follow-up in PR #12.
-- Repository status: PRs #7–#11 are merged in `main`; focused closure PR #12 is open for review. The original checkout's ignored `.scaffold-reference/` and `.claude/` directories remain preserved and were never copied or printed.
-- Execution agent: Codex under `VALRYDE-CODEX-C-INDEPENDENT-CLOSURE-003` on 2026-10-22.
-- Governance version: Shared AI Agent Status & Activity Reporting Policy 1.2; local copy matches canonical `valryde-api` `origin/main` blob `deff1bb0a5a9ffab9abd8132067ea0d5898e53ff`.
-- Checklist IDs: 22–37
-- GitHub issues / PRs: PRs #6–#11 are merged. Closure PR #12 is open and must not be self-merged.
-- Implementation progress: Independent frontend scope for IDs 22–28 and Favorites portion of 36 is complete and ready for Tech Lead review. IDs 29–35, available count 36 and ID 37 remain explicitly contract-gated.
-- Tech Lead review decision (if actually issued): No decision yet for PR #12. Merged PR evidence is recorded without claiming physical-device acceptance.
-- Current objective: `AGENT_C_UI_INDEPENDENT_SCOPE_COMPLETE` — PR #12 submitted; await review.
-- Last confirmed result: Integrated web baseline and correction gates pass; real Chrome-engine regression passes; Capacitor sync and Gradle `test lintDebug assembleDebug` pass; the new APK hash is documented.
-- Next concrete action: Tech Lead reviews the closure PR; owner performs the reserved physical-device and release-configuration gates.
-- Blocked by / decision owner: Physical Android-device integration is owner-controlled. Mobile testing policy synchronization waits for valryde-api PR #16 to merge. ID 37 waits on Agent A G6; IDs 29–35 and the available-count portion of ID 36 remain gated on Agent B's approved public consumer contracts.
-- Dependencies / affected agents: Agent A (auth contracts; D1, D2, G5), Agent B (tracking), Tech Lead G (review).
-
+- Updated at (ISO 8601, Asia/Singapore): 2026-10-23T03:17:05+08:00
+- Agent/module: C commuter, Codex under VALRYDE-C-RAPID-DELIVERY-003 and emergency takeover 002.
+- Repository/workspace: erwin-io/valryde-mobile-commuter, .codex-worktrees/agent-c-tracking.
+- Branch/base: codex/29-36-tracking-ui-adapter from origin/main e0fa549; tested source HEAD 6a5827f649141a0b350e8e0ebac76fb50b0128dc, PR #14; status-only follow-up does not change tested code. Independent of ID 37 PR #13 (source 570bb1b, status head a4b419f).
+- Implementation progress: READY_FOR_REVIEW for adapter/UI package; live IDs 29–35/count 36 remain IN_PROGRESS/INTEGRATION_BLOCKED; testable internal adapter, MapLibre markers, bounded interpolation, labels, plate/details, physical color, status/last update, direction scope, freshness and counts implemented. Live API/realtime integration BLOCKED.
+- Tech Lead decision: Not reviewed for these packages. No new Completed or Completed-ready claim; required integration evidence remains unavailable.
+- Recovery: Original checkout and six prior linked worktrees clean, no stashes/unpushed source; ignored Claude/scaffold files preserved. Two new isolated worktrees inside assigned repository only. Previous auth/map/routes/favorites/Android work already merged and reused.
+- Last confirmed result: Final tracking lint/typecheck, 20 files / 188 tests, production build 641.93 kB, Chrome 390/320 and runtime audit zero pass. Native test/lintDebug/assembleDebug passed; final latest-bundle sync/assembleDebug also passed with canonical generated paths. Primary suite 187 tests/browser/Android passes in PR #13.
+- API/contracts: Internal UI adapter is not an Agent B DTO; production default returns unavailable and performs no network request. Server eligibility is only narrowed, never computed or granted. No Traccar/Pusher/REST endpoint invented; test telemetry stays in specs.
+- Next: Agent G reviews PRs #13/#14; supply approved gateway/live development fixtures for integration acceptance. No merge/deploy performed. Agent G retains review/merge; no deploy.
+- Exact blockers: local configured API 127.0.0.1:3000 unreachable; Agent B approved public gateway contracts; live provider configuration, approved fixture login, Google OAuth/native links/origin/signing, OWNER_DEVICE_PENDING.
 ## Codex temporary-execution takeover — `VALRYDE-CODEX-C-TEMPORARY-TAKEOVER-001`
 
 - Recovery checkpoint: `AGENT_C_CODEX_TAKEOVER_READY` completed; PR checkpoint `AGENT_C_CODEX_PR6_FINAL_REVIEW_READY` completed.
@@ -41,12 +35,12 @@
 
 | Checklist ID | Feature / slice | Progress | Evidence (files/tests/PR) | Blocker / next action |
 |---:|---|---|---|---|
-| 22 | Commuter signup/login/profile | INDEPENDENT_SCOPE_COMPLETE; closure PR pending | Merged PR #11 plus URL-token scrub and integrated 170-test suite | Google sign-in, native links/origin and physical-device storage remain owner/external gates |
+| 22 | Commuter signup/login/profile | INDEPENDENT_SCOPE_COMPLETE; PR #12 merged | Merged PR #11 plus URL-token scrub and integrated 170-test suite | Google sign-in, native links/origin and physical-device storage remain owner/external gates |
 | 23 | Landing/map/current location | INDEPENDENT_SCOPE_COMPLETE | Merged PR #7; integrated unit/component/browser/Android evidence | Device permission/rotation acceptance; offline tiles blocked on provider-approved caching |
 | 24–28 | Route search/list/details/direction/line | INDEPENDENT_SCOPE_COMPLETE | Merged PR #10; real Chrome controlled-contract regression; integrated suite | Populated deployed API remains environment acceptance, not independent implementation |
-| 29–35 | Live availability/movement/details/status | CONTRACT_GATED; foundation merged only | PR #9 merged as contract-neutral clocks/animation/privacy tests | Approved Agent B public DTO, REST, Pusher, ordering/removal and reconciliation contracts |
-| 36 | Available count/favorites | Favorites INDEPENDENT_SCOPE_COMPLETE; count CONTRACT_GATED | PR #6 plus restart/failed-read/withdrawn-route browser and unit coverage | Count gated on Agent B; physical-device Preferences persistence owner-gated |
-| 37 | Place search/direct transit discovery | PARTIAL (UI gated) | "Plan a trip" gated form | Agent A G6 |
+| 29–35 | Live availability/movement/details/status | IN_PROGRESS; adapter/UI implemented, integration gated | VehicleTrackingStore, VehicleMarkerRenderer, TrackingPanel, map wiring and 188 tests; docs/testing/TRACKING_UI_ADAPTER.md | Approved Agent B DTO/REST/Pusher/reconciliation wire adapter |
+| 36 | Available count/favorites | Favorites INDEPENDENT_SCOPE_COMPLETE; count UI implemented/integration gated | PR #6 plus restart/failed-read/withdrawn-route browser and unit coverage | Count gated on Agent B; physical-device Preferences persistence owner-gated |
+| 37 | Place search/direct transit discovery | READY_FOR_REVIEW in separate PR #13 | 187 tests, Chrome 390/320, Android evidence on source 570bb1b | Live G6/provider unavailable; Agent G acceptance |
 
 ## Latest verification
 
@@ -101,6 +95,41 @@
 - State: OWNER_VERIFICATION_PENDING. No physical-device action was attempted or delegated.
 
 ## Activity log (newest first; preserve prior entries)
+
+### 2026-10-23 03:17 +08:00 — Rapid delivery PRs submitted
+- Tracking UI source committed/pushed as `6a5827f649141a0b350e8e0ebac76fb50b0128dc`; https://github.com/erwin-io/valryde-mobile-commuter/pull/14 open against main. Independent destination discovery PR #13 remains open (source `570bb1b8e4f76cdbdc25e463c67c5045b647b9f2`, status head `a4b419f56534cf64e0d2b94ef1c6c89b8d22d6a3`). Both attached to this chat.
+- UI/adapter development packages ready for Agent G review. IDs 22/23 merged work reused and regression-tested; 37 implemented; 29–36 actual UI advanced. Three final completion-ready IDs are NOT claimed: real G6 service and approved tracking wire integration are unavailable. No checklist status changed, self-merge or deployment.
+- Recovery preserved all original local work and ignored agent files; no stashes or original unpushed source. Both new worktrees kept for PR review. Canonical generated Android paths retained and build caches ignored.
+
+
+### 2026-10-23 +08:00 — Tracking UI package final verification
+- Final code: lint/typecheck, 20 files / 188 tests (18 new tests beyond merged baseline), serialized production build 641.93 kB, Chrome 390/320 and runtime audit zero pass. Exact 30,000 ms inclusive / 30,001 ms expiry regression passes.
+- Native `test lintDebug assembleDebug` passed. Final source web bundle was synchronized and reassembled successfully using canonical checked-in Gradle paths; APK SHA-256 `04E811D2F2C3C56262DD52E05D830A2134F7A998D645EA0453240040EA1911BA`. Machine-specific generated paths and Kotlin/build caches excluded; no native source/config/dependency change staged.
+- No user/driver/operator/device data or synthetic telemetry in production. Original checkout/earlier worktrees preserved. UI adapter package ready for review; live completion still blocked on approved Agent B wire contract. Primary three-item acceptance target not claimed achieved.
+- Next: commit/push and open independently reviewable PR against main; Agent G owns review/merge. No deploy.
+
+
+### 2026-10-23 +08:00 — Native tracking package verified; emulator resource limit
+- Capacitor sync and JBR 21 / SDK 36 Gradle `test lintDebug assembleDebug` passed (381 tasks; 8m01s under host load). Final freshness/count refinement still requires latest-bundle sync/assemble, queued after final serialized web gates.
+- Two development AVDs are installed (Pixel_8_API_29/34), but adb reports no attached target. Host has 1,626,556 KiB free physical memory of 16,454,352 KiB during concurrent toolchain work. Emulator startup/install test not run under this resource limit; no physical-device access attempted. Real Chrome development-target startup passed, not claimed as native runtime acceptance.
+- Rechecked canonical API main: unchanged at 810c8a13356ddbf0e28a4faf5ad7f86ce0a30479; no public consumer gateway routes appeared. Commuter main still e0fa549. PR #13 is MERGEABLE/CLEAN with GitGuardian SUCCESS.
+- Capacitor resolves the dependency junction to the other isolated Codex worktree and regenerates local build paths; restore these generated paths to canonical checked-in form after verification, exclude Kotlin/build caches, and do not commit machine-specific paths.
+
+
+### 2026-10-23 +08:00 — Tracking component/race/browser evidence
+- Initial test run failed 16 tests due to the zone-tracked interval (14 existing map tests and 2 panel tests). Moving timing outside Angular fixed all tests; added map/real-renderer selection/cleanup integration, giving 20 files / 188 passes.
+- Build initially emitted a 654.48 kB budget warning. Replaced DatePipe with native Intl time formatting; build now 641.93 kB without increasing budgets. One overlapping build attempt failed EBUSY while copying the map worker; the successful build and real MapLibre browser smoke passed; final verification is serialized.
+- Chrome 390/320 passes real MapLibre startup, controlled official route metadata, production unavailable adapter, no fabricated count/tracking endpoint, offline/reconnect and no overflow/page errors. Screenshots inspected separately.
+- Refined freshness cleanup to an outside-zone observation-deadline timer (30 seconds inclusive), avoiding stale polling drift. Re-running final suite/build/browser/native after this correctness change.
+- IDs 29–36 have measurable implementation progress in docs/testing/TRACKING_UI_ADAPTER.md, but real Agent B integration/acceptance remains blocked. No Completed claim.
+
+
+### 2026-10-23 +08:00 — Rapid tracking UI adapter implementation
+- New independent worktree/branch from main. Implemented fail-closed injectable internal gateway, full-snapshot store, server-eligible direction scope, malformed/future/expired fix rejection, revision/observation ordering, replacement/removal, public-field allowlist, counts and selection cleanup.
+- Added MapLibre marker rendering with safe route-label text, accessible plate/direction/status, physical-color accent, bounded received-fix animation, reduced-motion jump and cancellation/disposal. Added vehicle detail/count/status panel with list alternative.
+- Map context disconnects on hidden document/tab/offline, clears stale data, and requires new snapshots on reconnect/resume. No production telemetry fixtures or external endpoint/channel invented.
+- Initial lint/typecheck pass; test timeouts revealed zone-tracked interval stability defect, corrected with runOutsideAngular. Tests/build verification underway; no acceptance claim.
+
 
 ### 2026-10-22 13:35 +08:00 — Integrated independent UI closure completed
 

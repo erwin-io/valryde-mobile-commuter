@@ -16,6 +16,8 @@ class FakeTransitMap {
   readonly zoom = input<number>();
   readonly userLocation = input<[number, number] | null>(null);
   readonly routeLine = input<unknown>(null);
+  readonly vehicles = input<unknown[]>([]);
+  readonly vehicleSelected = output<string>();
   readonly bottomInset = input(0);
   readonly active = input(true);
   readonly perspective = input(false);
